@@ -1,0 +1,17 @@
+name: MinePaper
+version: 1.0
+main: org.example.Main
+api-version: '1.21'
+
+commands:
+  gm:
+    description: Change gamemode
+    usage: /gm <c/s/a/sp>
+
+  heal:
+    description: Heal player
+    usage: /heal [player](or yourself)
+
+  fly:
+    description: Player fly
+    usage: /fly
