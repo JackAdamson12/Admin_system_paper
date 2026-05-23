@@ -10,8 +10,12 @@ commands:
 
   heal:
     description: Heal player
-    usage: /heal [player](or yourself)
+    usage: /heal <>
 
   fly:
     description: Player fly
-    usage: /fly
+    usage: /fly <>
+
+  god:
+    description: God mode
+    usage: /god <>

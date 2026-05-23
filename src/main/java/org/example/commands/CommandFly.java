@@ -22,7 +22,7 @@ public class CommandFly implements  CommandExecutor
         }
 
         player.setAllowFlight(false);
-        player.setFlying(true);
+        player.setFlying(false);
         player.sendMessage("Fly disabled!");
 
         return false;
@@ -36,8 +36,14 @@ public class CommandFly implements  CommandExecutor
             Player player = (Player) sender;
 
 
-            if(args.length == 0)
+            if(args.length == 0 )
             {
+
+                if(player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR )
+                {
+                    sender.sendMessage("You have active fly in creative/spectator game mode\n");
+                    return true;
+                }
                 toggleFly(player);
 
                 return true;
@@ -53,6 +59,11 @@ public class CommandFly implements  CommandExecutor
             }
             else
             {
+                if(target.getGameMode() == GameMode.CREATIVE || target.getGameMode() == GameMode.SPECTATOR )
+                {
+                    sender.sendMessage("You have active fly in creative/spectator game mode\n");
+                    return true;
+                }
                 toggleFly(target);
             }
 
