@@ -19,3 +19,8 @@ commands:
   god:
     description: God mode
     usage: /god <>
+
+  vanish:
+    description: Vanish
+    usage: /vanish <>
+

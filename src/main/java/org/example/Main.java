@@ -1,11 +1,9 @@
 package org.example;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.example.commands.ChangeGameMode;
-import org.example.commands.CommandFly;
-import org.example.commands.CommandGodMode;
-import org.example.commands.CommandHealth;
+import org.example.commands.*;
 import org.example.events.GodModeEvent;
+import org.example.events.VanishEvent;
 
 public final class Main extends JavaPlugin
 {
@@ -24,6 +22,10 @@ public final class Main extends JavaPlugin
 
         getServer().getPluginManager().registerEvents(new GodModeEvent(commandGodMode),this);
 
+        CommandVanish commandVanish = new CommandVanish(this);
+        getCommand("vanish").setExecutor(commandVanish);
+
+        getServer().getPluginManager().registerEvents(new VanishEvent(commandVanish), this);
 
         getLogger().info("Plugin enabled!");
     }
