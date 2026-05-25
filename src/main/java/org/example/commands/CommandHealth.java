@@ -7,9 +7,17 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import org.bukkit.ChatColor;
+import org.example.utils.CheckPermission;
 
 public class CommandHealth implements CommandExecutor
 {
+
+    private final CheckPermission checkPermission;
+
+    public CommandHealth(CheckPermission checkPermission)
+    {
+        this.checkPermission = checkPermission;
+    }
 
     void healPlayer(Player player)
     {
@@ -20,9 +28,20 @@ public class CommandHealth implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
-        if(sender instanceof Player)
+        if(!(sender instanceof Player))
         {
-            Player player = (Player) sender;
+            return true;
+        }
+
+        Player player = (Player) sender;
+
+        if(!checkPermission.checkIsAdmin(player))
+        {
+            player.sendMessage("No permission!");
+            return true;
+        }
+
+
             if(args.length == 0)
             {
                 healPlayer(player);
@@ -42,7 +61,7 @@ public class CommandHealth implements CommandExecutor
             healPlayer(target);
 
             player.sendMessage(ChatColor.GREEN + "You healed " + target.getName());
-        }
+
 
         return true;
     }

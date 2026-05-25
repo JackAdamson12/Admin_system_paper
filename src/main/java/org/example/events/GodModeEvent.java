@@ -6,7 +6,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.example.commands.CommandGodMode;
 
-
 public class GodModeEvent implements Listener
 {
     private final CommandGodMode commandGodMode;
@@ -23,7 +22,7 @@ public class GodModeEvent implements Listener
         {
             Player player = (Player) event.getEntity();
 
-            if(commandGodMode.godList.contains(player))
+            if(commandGodMode.godList.contains(player.getUniqueId()))
             {
                 event.setCancelled(true);
             }

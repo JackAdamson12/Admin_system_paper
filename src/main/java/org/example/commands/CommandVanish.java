@@ -7,18 +7,23 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.Main;
+import org.example.utils.CheckPermission;
 
 import java.util.HashSet;
+import java.util.UUID;
 
 public class CommandVanish implements CommandExecutor
 {
-    public HashSet<Player> vanishList = new HashSet<>();
+    public HashSet<UUID> vanishList = new HashSet<>();
 
     private final Main plugin;
 
-    public CommandVanish(Main plugin)
+    private final CheckPermission checkPermission;
+
+    public CommandVanish(Main plugin, CheckPermission checkPermission)
     {
         this.plugin = plugin;
+        this.checkPermission = checkPermission;
     }
 
     public Main getPlugin()
@@ -26,7 +31,7 @@ public class CommandVanish implements CommandExecutor
         return plugin;
     }
 
-    void hide(Player player)
+    private void hide(Player player)
     {
         for(Player onlinePlayer : Bukkit.getOnlinePlayers())
         {
@@ -37,7 +42,7 @@ public class CommandVanish implements CommandExecutor
         }
     }
 
-    void show(Player player)
+    private void show(Player player)
     {
         for(Player onlinePlayer : Bukkit.getOnlinePlayers())
         {
@@ -51,66 +56,65 @@ public class CommandVanish implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
-        if(sender instanceof Player)
+        if(!(sender instanceof Player))
         {
-            Player player = (Player) sender;
-
-            if(args.length == 0)
-            {
-                if(vanishList.contains(player))
-                {
-                    vanishList.remove(player);
-
-                    show(player);
-
-                    player.sendMessage("Vanish disabled!");
-
-                    return true;
-                }
-
-                vanishList.add(player);
-
-                hide(player);
-
-                player.sendMessage("Vanish enabled!");
-
-                return true;
-            }
-
-            Player target = Bukkit.getPlayer(args[0]);
-
-            if(target == null)
-            {
-                player.sendMessage(ChatColor.RED + "Player not found!");
-                return true;
-            }
-
-            if(vanishList.contains(target))
-            {
-                vanishList.remove(target);
-
-                show(target);
-
-                player.sendMessage("Vanish disabled!");
-
-                return true;
-            }
-            else
-            {
-                vanishList.add(target);
-
-                hide(target);
-
-                player.sendMessage("Vanish enabled!");
-
-                return true;
-
-            }
-
-
-
-
+            return true;
         }
+
+        Player player = (Player) sender;
+
+        if(!checkPermission.checkIsAdmin(player))
+        {
+            player.sendMessage(ChatColor.RED + "No permission!");
+            return true;
+        }
+
+        if(args.length == 0)
+        {
+            if(vanishList.contains(player.getUniqueId()))
+            {
+                vanishList.remove(player.getUniqueId());
+
+                show(player);
+
+                player.sendMessage(ChatColor.RED + "Vanish disabled!");
+
+                return true;
+            }
+
+            vanishList.add(player.getUniqueId());
+
+            hide(player);
+
+            player.sendMessage(ChatColor.GREEN + "Vanish enabled!");
+
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(args[0]);
+
+        if(target == null)
+        {
+            player.sendMessage(ChatColor.RED + "Player not found!");
+            return true;
+        }
+
+        if(vanishList.contains(target.getUniqueId()))
+        {
+            vanishList.remove(target.getUniqueId());
+
+            show(target);
+
+            player.sendMessage(ChatColor.RED + "Vanish disabled for " + target.getName());
+
+            return true;
+        }
+
+        vanishList.add(target.getUniqueId());
+
+        hide(target);
+
+        player.sendMessage(ChatColor.GREEN + "Vanish enabled for " + target.getName());
 
         return true;
     }

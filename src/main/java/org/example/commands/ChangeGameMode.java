@@ -6,70 +6,77 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.example.utils.CheckPermission;
 
 public class ChangeGameMode implements CommandExecutor
 {
+    private final CheckPermission checkPermission;
 
+    public ChangeGameMode(CheckPermission checkPermission)
+    {
+        this.checkPermission = checkPermission;
+    }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
+    {
+        if(!(sender instanceof Player))
+        {
+            return true;
+        }
 
-        if (sender instanceof Player) {
-            Player player = (Player) sender;
+        Player player = (Player) sender;
 
-            if(args.length == 0)
+        if(!checkPermission.checkIsAdmin(player))
+        {
+            player.sendMessage("No permission!");
+            return true;
+        }
+
+        if(args.length == 0)
+        {
+            player.sendMessage("Use /gm <c/s/a/sp> [player]");
+            return true;
+        }
+
+        Player target = player;
+
+        if(args.length == 2)
+        {
+            target = Bukkit.getPlayer(args[1]);
+
+            if(target == null)
             {
-                player.sendMessage("Use /gm <c/s/a/sp> [player]");
+                player.sendMessage("Player not found!");
                 return true;
-            }
-
-            Player target = player;
-
-
-            if(args.length == 2)
-            {
-                target = Bukkit.getPlayer(args[1]);
-
-                if(target == null)
-                {
-                    player.sendMessage("Player not found!");
-                    return true;
-                }
-            }
-
-            if(args[0].equalsIgnoreCase("c"))
-            {
-                target.setGameMode(GameMode.CREATIVE);
-                target.sendMessage("Game mode: Creative");
-            }
-
-            else if(args[0].equalsIgnoreCase("s"))
-            {
-                target.setGameMode(GameMode.SURVIVAL);
-                target.sendMessage("Game mode: Survival");
-            }
-
-            else if(args[0].equalsIgnoreCase("a"))
-            {
-                target.setGameMode(GameMode.ADVENTURE);
-                target.sendMessage("Game mode: Adventure");
-            }
-
-            else if(args[0].equalsIgnoreCase("sp"))
-            {
-                target.setGameMode(GameMode.SPECTATOR);
-                target.sendMessage("Game mode: Spectator");
-            }
-
-            else
-            {
-                player.sendMessage("Unknown gamemode!");
             }
         }
 
+        if(args[0].equalsIgnoreCase("c"))
+        {
+            target.setGameMode(GameMode.CREATIVE);
+            target.sendMessage("Gamemode: Creative");
+        }
+        else if(args[0].equalsIgnoreCase("s"))
+        {
+            target.setGameMode(GameMode.SURVIVAL);
+            target.sendMessage("Gamemode: Survival");
+        }
+        else if(args[0].equalsIgnoreCase("a"))
+        {
+            target.setGameMode(GameMode.ADVENTURE);
+            target.sendMessage("Gamemode: Adventure");
+        }
+        else if(args[0].equalsIgnoreCase("sp"))
+        {
+            target.setGameMode(GameMode.SPECTATOR);
+            target.sendMessage("Gamemode: Spectator");
+        }
+        else
+        {
+            player.sendMessage("Unknown gamemode!");
+        }
+
         return true;
-
     }
-
-
 }

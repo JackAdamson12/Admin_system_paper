@@ -24,3 +24,11 @@ commands:
     description: Vanish
     usage: /vanish <>
 
+  who:
+    description: Check admin status
+    usage: /who
+
+  UUID:
+    description: Show UUID
+    usage: /UUID
+

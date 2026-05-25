@@ -5,46 +5,82 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.example.utils.CheckPermission;
 
 import java.util.HashSet;
-
+import java.util.UUID;
 
 public class CommandGodMode implements CommandExecutor
 {
+    public HashSet<UUID> godList = new HashSet<>();
 
-    public HashSet<Player> godList = new HashSet<>();
+    private final CheckPermission checkPermission;
+
+    public CommandGodMode(CheckPermission checkPermission)
+    {
+        this.checkPermission = checkPermission;
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
-
-        if(args.length == 0)
+        if(!(sender instanceof Player))
         {
-            Player player = (Player) sender;
-
-            if(godList.contains(player))
-            {
-                godList.remove(player);
-                player.sendMessage("God mode disabled!");
-                return true;
-            }
-
-            godList.add(player);
-            player.sendMessage("God mode enabled!");
             return true;
         }
 
+        Player player = (Player) sender;
+
+        if(!checkPermission.checkIsAdmin(player))
+        {
+            player.sendMessage("No permission!");
+            return true;
+        }
+
+        if(args.length == 0)
+        {
+            if(godList.contains(player.getUniqueId()))
+            {
+                godList.remove(player.getUniqueId());
+
+                player.sendMessage("God mode disabled!");
+
+                return true;
+            }
+
+            godList.add(player.getUniqueId());
+
+            player.sendMessage("God mode enabled!");
+
+            return true;
+        }
 
         Player target = Bukkit.getPlayer(args[0]);
 
         if(target == null)
         {
-            sender.sendMessage("Player is not found!\n");
+            player.sendMessage("Player not found!");
+
             return true;
+        }
+
+        if(godList.contains(target.getUniqueId()))
+        {
+            godList.remove(target.getUniqueId());
+
+            player.sendMessage(
+                    "God mode disabled for " +
+                            target.getName()
+            );
         }
         else
         {
-            godList.add(target);
+            godList.add(target.getUniqueId());
+
+            player.sendMessage(
+                    "God mode enabled for " +
+                            target.getName()
+            );
         }
 
         return true;
