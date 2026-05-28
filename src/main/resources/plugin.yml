@@ -6,29 +6,59 @@ api-version: '1.21'
 commands:
   gm:
     description: Change gamemode
-    usage: /gm <c/s/a/sp>
+    usage: /gm <c/s/a/sp> or <c/s/a/sp> + <nickname>
 
   heal:
     description: Heal player
-    usage: /heal <>
+    usage: /heal or <nickname>
 
   fly:
     description: Player fly
-    usage: /fly <>
+    usage: /fly or <nickname>
 
   god:
     description: God mode
-    usage: /god <>
+    usage: /god or <nickname>
 
   vanish:
     description: Vanish
-    usage: /vanish <>
+    usage: /vanish or <nickname>
 
   who:
     description: Check admin status
     usage: /who
 
   UUID:
-    description: Show UUID
-    usage: /UUID
+    description: Show uuid
+    usage: /uuid
+
+  settime:
+    description: Set times
+    usage: /settime <int>
+
+  addadmin:
+    description: Add new server admin
+    usage: /addadmin <nickname>
+
+  rmadmin:
+    description: Remove server admin
+    usage: /rmadmin <nickname>
+
+  tp:
+    description: Teleport to player
+    usage: /tp <nickname>
+
+  tphere:
+    description: Teleport player to you
+    usage: /tphere <nickname>
+
+  ttp:
+    description: Teleport player to player
+    usage: /ttp <player1> <player2>
+
+  tpall:
+    description: Teleport all players to you
+    usage: /tpall confirm
+
+
 
