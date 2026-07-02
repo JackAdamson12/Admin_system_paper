@@ -3,7 +3,6 @@ package org.example;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.example.commands.*;
-import org.example.events.FreezeEvent;
 import org.example.events.GodModeEvent;
 import org.example.events.VanishEvent;
 import org.example.utils.CheckPermission;
@@ -59,12 +58,6 @@ public final class Main extends JavaPlugin
         getServer().getPluginManager().registerEvents(new VanishEvent(commandVanish), this);
 
         getCommand("settime").setExecutor(new CommandSetTime(checkPermission));
-
-
-        CommandFreeze commandFreeze = new CommandFreeze(checkPermission);
-        getCommand("freeze").setExecutor(commandFreeze);
-        getCommand("melt").setExecutor(new CommandMelt(checkPermission,commandFreeze));
-        getServer().getPluginManager().registerEvents(new FreezeEvent(commandFreeze),this);
 
 
         getLogger().info("Plugin enabled!");
