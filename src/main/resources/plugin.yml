@@ -68,5 +68,25 @@ commands:
     description: Unfreeze player or all players on server
     usage: /melt all/player
 
+  invsee:
+    description: Show player inventory
+    usage: /invsee + player
+
+  ecsee:
+    description: Show player ender chest
+    usage: /ecsee + player
+
+  clear:
+    description: clear player inventory
+    usage: /clear + player
+
+  clearall:
+    description: clear ender an inventory
+    usage: /clearall + player
+
+
+
+
+
 
 
