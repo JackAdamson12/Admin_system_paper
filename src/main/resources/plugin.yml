@@ -28,7 +28,7 @@ commands:
     description: Check admin status
     usage: /who
 
-  UUID:
+  uuid:
     description: Show uuid
     usage: /uuid
 
@@ -59,6 +59,14 @@ commands:
   tpall:
     description: Teleport all players to you
     usage: /tpall confirm
+
+  freeze:
+    description: Freeze player or all players on server
+    usage: /freeze all/player
+
+  melt:
+    description: Unfreeze player or all players on server
+    usage: /melt all/player
 
 
 
