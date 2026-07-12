@@ -1,6 +1,8 @@
 package org.example;
 
 
+import org.bukkit.command.Command;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.example.commands.*;
 import org.example.events.FreezeEvent;
@@ -8,6 +10,8 @@ import org.example.events.GodModeEvent;
 import org.example.events.VanishEvent;
 import org.example.utils.CheckPermission;
 import org.example.utils.TeleportUtils;
+
+import java.nio.file.Path;
 
 public final class Main extends JavaPlugin
 {
@@ -19,8 +23,9 @@ public final class Main extends JavaPlugin
     {
         saveDefaultConfig();
 
-        checkPermission = new CheckPermission(this);
+        saveResource("adminfo.txt", false);
 
+        checkPermission = new CheckPermission(this);
         checkPermission.loadAdmins();
 
         //Teleport
@@ -51,6 +56,11 @@ public final class Main extends JavaPlugin
         CommandVanish commandVanish = new CommandVanish(this,checkPermission);
         getCommand("vanish").setExecutor(commandVanish);
         getServer().getPluginManager().registerEvents(new VanishEvent(commandVanish), this);
+        getCommand("kick").setExecutor(new CommandKick(checkPermission));
+        //Spectate
+        CommandSpectate commandSpectate = new CommandSpectate(checkPermission,this);
+        getCommand("spectate").setExecutor(commandSpectate);
+        getCommand("unspectate").setExecutor(new CommandUnspectate(checkPermission,this,commandSpectate));
 
         //time on world
         getCommand("settime").setExecutor(new CommandSetTime(checkPermission));
@@ -67,6 +77,11 @@ public final class Main extends JavaPlugin
         getCommand("ecsee").setExecutor(new CommandEcsee(checkPermission));
         getCommand("clear").setExecutor(new CommandClearInv(checkPermission));
         getCommand("clearall").setExecutor(new CommandClearAll(checkPermission));
+        getCommand("give").setExecutor(new CommandGive(checkPermission));
+
+        //Info
+        getCommand("adminfo").setExecutor(new CommandAdminInfo(checkPermission, this));
+
 
 
 

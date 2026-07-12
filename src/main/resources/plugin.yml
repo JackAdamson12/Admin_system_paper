@@ -84,6 +84,26 @@ commands:
     description: clear ender an inventory
     usage: /clearall + player
 
+  kick:
+    description: Kick player
+    usage: /kick + player
+
+  give:
+    description: Give item(s) to player;
+    usage: /give + player + item + amount;
+
+  adminfo:
+    description: Show info
+    usage: /adminfo
+
+  spectate:
+    description: Spectate player
+    usage: /spectate <player>
+
+  unspectate:
+    description: Stop spectating
+    usage: /unspectate
+
 
 
 
