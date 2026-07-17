@@ -68,19 +68,13 @@ public class CommandGodMode implements CommandExecutor
         {
             godList.remove(target.getUniqueId());
 
-            player.sendMessage(
-                    "God mode disabled for " +
-                            target.getName()
-            );
+            player.sendMessage("God mode disabled for " + target.getName());
         }
         else
         {
             godList.add(target.getUniqueId());
 
-            player.sendMessage(
-                    "God mode enabled for " +
-                            target.getName()
-            );
+            player.sendMessage("God mode enabled for " + target.getName());
         }
 
         return true;

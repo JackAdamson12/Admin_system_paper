@@ -27,8 +27,12 @@ public class CheckPermission {
         }
     }
 
-    public boolean checkIsAdmin(Player player) {
+    public boolean checkIsAdmin(Player player)
+    {
+        admins.contains(player.getUniqueId());
+
         return admins.contains(player.getUniqueId());
+
     }
 
     public void addAdmin(Player admin, Player target) {
@@ -48,6 +52,8 @@ public class CheckPermission {
                 if(target.getGameMode() != GameMode.SURVIVAL)
                 {
                     admin.sendMessage(ChatColor.YELLOW + "Warning: " + target.getName() + " still has gamemode: " + target.getGameMode().name());
+                    admin.sendMessage(ChatColor.YELLOW + "Changing gamemode for " +  target.getName() + " to survived");
+                    target.setGameMode(GameMode.SURVIVAL);
                 }
             }
 

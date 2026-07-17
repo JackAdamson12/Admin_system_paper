@@ -104,6 +104,22 @@ commands:
     description: Stop spectating
     usage: /unspectate
 
+  ban:
+    description: Ban player
+    usage: /ban <player> <reason>
+
+  pardon:
+    description: Unban player
+    usage: /pardon <player>
+
+  baninfo:
+    description: Shows information about a player's ban
+    usage: /baninfo <player>
+
+  tempban:
+    description: Temping ban;
+    usage: /tempban <player> <time> <reason>
+
 
 
 

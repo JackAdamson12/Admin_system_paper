@@ -52,30 +52,72 @@ public class ChangeGameMode implements CommandExecutor
             }
         }
 
+        if(args.length == 2)
+        {
+            if(args[0].equalsIgnoreCase("c"))
+            {
+                target.setGameMode(GameMode.CREATIVE);
+                target.sendMessage("Gamemode: Creative");
+                player.sendMessage("You change " + target.getName() + " gamemode to creative");
+                return true;
+            }
+            else if(args[0].equalsIgnoreCase("s"))
+            {
+                target.setGameMode(GameMode.SURVIVAL);
+                target.sendMessage("Gamemode: Survival");
+                player.sendMessage("You change " + target.getName() + " gamemode to survival");
+                return true;
+            }
+            else if(args[0].equalsIgnoreCase("a"))
+            {
+                target.setGameMode(GameMode.ADVENTURE);
+                target.sendMessage("Gamemode: Adventure");
+                player.sendMessage("You change " + target.getName() + " gamemode to adventure");
+                return true;
+            }
+            else if(args[0].equalsIgnoreCase("sp"))
+            {
+                target.setGameMode(GameMode.SPECTATOR);
+                target.sendMessage("Gamemode: Spectator");
+                player.sendMessage("You change " + target.getName() + " gamemode to Spectator");
+                return true;
+            }
+            else
+            {
+                player.sendMessage("Unknown gamemode!");
+            }
+        }
+
         if(args[0].equalsIgnoreCase("c"))
         {
             target.setGameMode(GameMode.CREATIVE);
             target.sendMessage("Gamemode: Creative");
+            return true;
         }
         else if(args[0].equalsIgnoreCase("s"))
         {
             target.setGameMode(GameMode.SURVIVAL);
             target.sendMessage("Gamemode: Survival");
+            return true;
         }
         else if(args[0].equalsIgnoreCase("a"))
         {
             target.setGameMode(GameMode.ADVENTURE);
             target.sendMessage("Gamemode: Adventure");
+            return true;
         }
         else if(args[0].equalsIgnoreCase("sp"))
         {
             target.setGameMode(GameMode.SPECTATOR);
             target.sendMessage("Gamemode: Spectator");
+            return true;
         }
         else
         {
             player.sendMessage("Unknown gamemode!");
         }
+
+
 
         return true;
     }

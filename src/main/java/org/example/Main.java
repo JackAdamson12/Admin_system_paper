@@ -5,6 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.example.commands.*;
+import org.example.commands.punishmentManager.*;
 import org.example.events.FreezeEvent;
 import org.example.events.GodModeEvent;
 import org.example.events.VanishEvent;
@@ -81,6 +82,12 @@ public final class Main extends JavaPlugin
 
         //Info
         getCommand("adminfo").setExecutor(new CommandAdminInfo(checkPermission, this));
+
+        //Punishment
+        getCommand("ban").setExecutor(new CommandBan(checkPermission));
+        getCommand("pardon").setExecutor(new CommandUnban(checkPermission));
+        getCommand("baninfo").setExecutor(new CommandBanInfo(checkPermission));
+        getCommand("tempban").setExecutor(new CommandTempBan(checkPermission));
 
 
 
