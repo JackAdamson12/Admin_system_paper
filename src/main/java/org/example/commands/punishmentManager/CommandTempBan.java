@@ -89,6 +89,8 @@ public class CommandTempBan implements CommandExecutor
             onlineTarget.kickPlayer("You have been temporarily banned.\n" + "Time: " + args[1] + "\n" + "Reason: " + reason);
         }
 
+
+
         player.sendMessage("Player " + target.getName() + " is banned.\n" + "Time: " + args[1] + "\n" + "Reason: " + reason);
 
         return true;

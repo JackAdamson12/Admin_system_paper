@@ -5,7 +5,9 @@ import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.example.commands.*;
+import org.example.commands.muteManager.MuteManager;
 import org.example.commands.punishmentManager.*;
+import org.example.events.ChatEvent;
 import org.example.events.FreezeEvent;
 import org.example.events.GodModeEvent;
 import org.example.events.VanishEvent;
@@ -83,11 +85,19 @@ public final class Main extends JavaPlugin
         //Info
         getCommand("adminfo").setExecutor(new CommandAdminInfo(checkPermission, this));
 
-        //Punishment
+        //Ban
         getCommand("ban").setExecutor(new CommandBan(checkPermission));
         getCommand("pardon").setExecutor(new CommandUnban(checkPermission));
         getCommand("baninfo").setExecutor(new CommandBanInfo(checkPermission));
         getCommand("tempban").setExecutor(new CommandTempBan(checkPermission));
+
+        //Mute
+        MuteManager muteManager = new MuteManager(this);
+        getCommand("mute").setExecutor(new CommandMute(checkPermission,muteManager));
+        getCommand("tmute").setExecutor(new CommandTempMute(checkPermission,muteManager));
+        getCommand("unmute").setExecutor(new CommandUnmute(checkPermission,muteManager));
+        getCommand("muteinfo").setExecutor(new CommandMuteInfo(checkPermission, muteManager));
+        getServer().getPluginManager().registerEvents(new ChatEvent(muteManager),this);
 
 
 

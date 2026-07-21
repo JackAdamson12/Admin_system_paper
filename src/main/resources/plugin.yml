@@ -120,6 +120,22 @@ commands:
     description: Temping ban;
     usage: /tempban <player> <time> <reason>
 
+  mute:
+    description: Mute player forever
+    usage: /mute <player> <reason>
+
+  tmute:
+    description: Temp mute
+    usage: /tmute <player> <time> <reason>
+
+  unmute:
+    description: Unmute player
+    usage: /unmute <player>
+
+  muteinfo:
+    description: Information about target mute
+    usage: /muteinfo <player>
+
 
 
 
