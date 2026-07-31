@@ -1,8 +1,10 @@
 package org.example.commands.muteManager;
 
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.example.Main;
 import org.example.commands.muteManager.muteData.MuteData;
 
@@ -50,19 +52,19 @@ public class MuteManager
         loadData();
     }
 
-    public void mute(UUID uuid, String reason, String moderator)
+    public synchronized void mute(UUID uuid, String reason, String moderator)
     {
-            MuteData muteData = new MuteData(uuid, reason, moderator, null);
-            mutes.put(uuid, muteData);
+        MuteData muteData = new MuteData(uuid, reason, moderator, null);
+        mutes.put(uuid, muteData);
 
-            config.set("mutes." + uuid + ".reason", reason);
-            config.set("mutes." + uuid + ".moderator", moderator);
-            config.set("mutes." + uuid + ".expiresAt", null);
+        config.set("mutes." + uuid + ".reason", reason);
+        config.set("mutes." + uuid + ".moderator", moderator);
+        config.set("mutes." + uuid + ".expiresAt", null);
 
-            saveData();
+        saveData();
     }
 
-    public void tempMute(UUID uuid, String reason, String moderator, Duration duration)
+    public synchronized void tempMute(UUID uuid, String reason, String moderator, Duration duration)
     {
         Instant expiresAt = Instant.now().plus(duration);
         MuteData muteData = new MuteData(uuid, reason, moderator, expiresAt);
@@ -75,32 +77,42 @@ public class MuteManager
         saveData();
     }
 
-    public void unmute(UUID uuid)
+    public synchronized void unmute(UUID uuid)
     {
         mutes.remove(uuid);
         config.set("mutes." + uuid, null);
         saveData();
     }
 
-    public void muteInfo(Player admin, Player target)
+    public synchronized void muteInfo(CommandSender sender, OfflinePlayer target)
     {
         MuteData muteData = mutes.get(target.getUniqueId());
+        String targetName = target.getName();
 
-        if (muteData == null)
+        if(targetName == null)
         {
-            admin.sendMessage("Player " + target.getName() + " is not muted.");
+            targetName = target.getUniqueId().toString();
+        }
+
+        if(muteData == null)
+        {
+            sender.sendMessage("Player " + targetName + " is not muted.");
             return;
         }
 
-        admin.sendMessage("Player: " + target.getName() + " is muted");
+        sender.sendMessage("Player: " + targetName + " is muted");
+
         if(muteData.expiresAt() == null)
         {
-            admin.sendMessage("Mute time: Forever");
+            sender.sendMessage("Mute time: Forever");
         }
-        admin.sendMessage("Mute time: " + muteData.expiresAt());
-        admin.sendMessage("Reason: " + muteData.reason());
-        admin.sendMessage("Moderator: " + muteData.moderator());
+        else
+        {
+            sender.sendMessage("Mute expires at: " + muteData.expiresAt());
+        }
 
+        sender.sendMessage("Reason: " + muteData.reason());
+        sender.sendMessage("Moderator: " + muteData.moderator());
     }
 
     private void saveData()
@@ -111,10 +123,12 @@ public class MuteManager
         }
         catch (IOException e)
         {
-            throw new RuntimeException(e);
+            plugin.getLogger().severe("Could not save mute.yml");
+            e.printStackTrace();
         }
 
     }
+
     private void loadData()
     {
         if (!config.isConfigurationSection("mutes"))
@@ -124,16 +138,35 @@ public class MuteManager
 
         for (String uuidString : config.getConfigurationSection("mutes").getKeys(false))
         {
-            UUID uuid = UUID.fromString(uuidString);
+            UUID uuid;
+
+            try
+            {
+                uuid = UUID.fromString(uuidString);
+            }
+            catch (IllegalArgumentException exception)
+            {
+                plugin.getLogger().warning("Invalid UUID in mute.yml: " + uuidString);
+                continue;
+            }
 
             String path = "mutes." + uuidString;
 
             String reason = config.getString(path + ".reason");
             String moderator = config.getString(path + ".moderator");
-
             String expires = config.getString(path + ".expiresAt");
 
-            Instant expiresAt = expires == null ? null : Instant.parse(expires);
+            Instant expiresAt;
+
+            try
+            {
+                expiresAt = expires == null ? null : Instant.parse(expires);
+            }
+            catch (Exception exception)
+            {
+                plugin.getLogger().warning("Invalid mute expiration for UUID: " + uuidString);
+                continue;
+            }
 
             MuteData muteData = new MuteData(uuid, reason, moderator, expiresAt);
 
@@ -141,7 +174,7 @@ public class MuteManager
         }
     }
 
-    public boolean isMuted(UUID uuid)
+    public synchronized boolean isMuted(UUID uuid)
     {
         MuteData muteData = mutes.get(uuid);
 
@@ -152,10 +185,32 @@ public class MuteManager
 
         if (muteData.expiresAt() != null && Instant.now().isAfter(muteData.expiresAt()))
         {
-            unmute(uuid);
+            mutes.remove(uuid);
+
+            if(Bukkit.isPrimaryThread())
+            {
+                config.set("mutes." + uuid, null);
+                saveData();
+            }
+            else
+            {
+                plugin.getServer().getScheduler().runTask(plugin, () -> clearExpiredMute(uuid));
+            }
+
             return false;
         }
 
         return true;
+    }
+
+    private synchronized void clearExpiredMute(UUID uuid)
+    {
+        if(mutes.containsKey(uuid))
+        {
+            return;
+        }
+
+        config.set("mutes." + uuid, null);
+        saveData();
     }
 }

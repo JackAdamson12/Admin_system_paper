@@ -9,6 +9,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.example.commands.logsManager.PunishmentLogManager;
+import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.utils.CheckPermission;
 
 import java.time.Instant;
@@ -18,11 +20,15 @@ import java.util.Arrays;
 
 public class CommandBan implements CommandExecutor
 {
+    private final PunishmentLogManager punishmentLogManager;
     private final CheckPermission checkPermission;
     private final ProfileBanList banList;
 
-    public CommandBan(CheckPermission checkPermission)
+    private String targetName;
+
+    public CommandBan(CheckPermission checkPermission,PunishmentLogManager punishmentLogManager)
     {
+        this.punishmentLogManager = punishmentLogManager;
         this.banList = Bukkit.getBanList(BanListType.PROFILE);
         this.checkPermission = checkPermission;
     }
@@ -30,39 +36,42 @@ public class CommandBan implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
-        if(!(sender instanceof Player))
-        {
-            return true;
-        }
 
-        Player player = (Player) sender;
-
-        if(!checkPermission.checkIsAdmin(player))
+        if(!checkPermission.checkIsAdmin(sender))
         {
-            player.sendMessage("No permission!");
+            sender.sendMessage("No permission!");
             return true;
         }
 
         if(args.length < 2)
         {
-            player.sendMessage("Use /ban <player> <reason>");
+            sender.sendMessage("Use /ban <player> <reason>");
             return true;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
 
-        String targetName = getTargetName(target, args[0]);
+        targetName = getTargetName(target, args[0]);
 
+        String reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+
+        banPlayer(sender,target,reason);
+
+        return true;
+    }
+
+    private void banPlayer(CommandSender sender, OfflinePlayer target, String reason)
+    {
         if(!target.hasPlayedBefore() && !target.isOnline())
         {
-            player.sendMessage("Player has never joined this server.");
-            return true;
+            sender.sendMessage("Player has never joined this server.");
+            return;
         }
 
-        if(target.getUniqueId().equals(player.getUniqueId()))
+        if(sender instanceof Player player && target.getUniqueId().equals(player.getUniqueId()))
         {
-            player.sendMessage("You cannot ban yourself.");
-            return true;
+            sender.sendMessage("You cannot ban yourself.");
+            return;
         }
 
         Player onlinePlayer = target.getPlayer();
@@ -71,8 +80,8 @@ public class CommandBan implements CommandExecutor
         {
             if(checkPermission.checkIsAdmin(onlinePlayer))
             {
-                player.sendMessage("You cannot ban administrators.");
-                return true;
+                sender.sendMessage("You cannot ban administrators.");
+                return;
             }
         }
 
@@ -89,23 +98,33 @@ public class CommandBan implements CommandExecutor
                 formattedDate = Instant.ofEpochMilli(lastLogin).atZone(ZoneId.systemDefault()).format(formatter);
             }
 
-            player.sendMessage("Player " + targetName + " is already banned.\n" + "UUID: " + target.getUniqueId() + "\n" + "Last login: " + formattedDate);
+            sender.sendMessage("Player " + targetName + " is already banned.\n" + "UUID: " + target.getUniqueId() + "\n" + "Last login: " + formattedDate);
 
-            return true;
+            return;
         }
 
-        String reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 
-        banList.addBan(target.getPlayerProfile(), reason, (Instant) null, player.getName());
+        banList.addBan(target.getPlayerProfile(), reason, (Instant) null, sender.getName());
 
         if(onlinePlayer != null)
         {
-            onlinePlayer.kick(Component.text("You have been permanently banned.\n" + "Reason: " + reason + "\n" + "Administrator: " + player.getName()));
+            onlinePlayer.kick(Component.text("You have been permanently banned.\n" + "Reason: " + reason + "\n" + "Administrator: " + sender.getName()));
         }
 
-        player.sendMessage("Player " + targetName + " has been banned.\n" + "UUID: " + target.getUniqueId() + "\n" + "Reason: " + reason);
+        punishmentLogManager.saveLog(target,reason,sender, PunishmentType.BAN,Instant.now(),null);
 
-        return true;
+        sender.sendMessage("Player " + targetName + " has been banned.\n" + "UUID: " + target.getUniqueId() + "\n" + "Reason: " + reason);
+
+    }
+
+    private void banFromGui(CommandSender sender, OfflinePlayer target)
+    {
+        banPlayer(sender,target,"Banned by admin!");
+    }
+
+    public void getBan(Player admin,Player target)
+    {
+        banFromGui(admin,target);
     }
 
     private String getTargetName(OfflinePlayer target, String argument)
@@ -119,4 +138,6 @@ public class CommandBan implements CommandExecutor
 
         return targetName;
     }
+
+
 }

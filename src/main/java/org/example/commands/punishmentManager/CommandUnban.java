@@ -8,15 +8,21 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.example.commands.logsManager.PunishmentLogManager;
+import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.utils.CheckPermission;
+
+import java.time.Instant;
 
 public class CommandUnban implements CommandExecutor
 {
     private final CheckPermission checkPermission;
     private final ProfileBanList banList;
+    private final PunishmentLogManager punishmentLogManager;
 
-    public CommandUnban(CheckPermission checkPermission)
+    public CommandUnban(CheckPermission checkPermission, PunishmentLogManager punishmentLogManager)
     {
+        this.punishmentLogManager = punishmentLogManager;
         this.banList = Bukkit.getBanList(BanListType.PROFILE);
         this.checkPermission = checkPermission;
     }
@@ -24,22 +30,17 @@ public class CommandUnban implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
-        if(!(sender instanceof Player))
-        {
-            return true;
-        }
 
-        Player player = (Player) sender;
 
-        if(!checkPermission.checkIsAdmin(player))
+        if(!checkPermission.checkIsAdmin(sender))
         {
-            player.sendMessage("No permission!");
+            sender.sendMessage("No permission!");
             return true;
         }
 
         if(args.length == 0)
         {
-            player.sendMessage("Use /pardon <player>");
+            sender.sendMessage("Use /pardon <player>");
             return true;
         }
 
@@ -47,20 +48,22 @@ public class CommandUnban implements CommandExecutor
 
         if(!target.hasPlayedBefore() && !target.isOnline())
         {
-            player.sendMessage("Player has never joined this server.");
+            sender.sendMessage("Player has never joined this server.");
             return true;
         }
 
         if(!target.isBanned())
         {
-            player.sendMessage("Player " + getTargetName(target, args[0]) + " is not banned.");
+            sender.sendMessage("Player " + getTargetName(target, args[0]) + " is not banned.");
 
             return true;
         }
 
         banList.pardon(target.getPlayerProfile());
 
-        player.sendMessage("Player " + getTargetName(target, args[0]) + " has been unbanned.\n" + "UUID: " + target.getUniqueId());
+
+        sender.sendMessage("Player " + getTargetName(target, args[0]) + " has been unbanned.\n" + "UUID: " + target.getUniqueId());
+        punishmentLogManager.saveLog(target,"no reason",sender, PunishmentType.UNBAN, Instant.now(), null);
 
         return true;
     }

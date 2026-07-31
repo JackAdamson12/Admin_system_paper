@@ -25,6 +25,7 @@ public class CommandRemoveAdmins implements CommandExecutor
 
         Player player = (Player) sender;
 
+
         if(args.length == 0)
         {
             return true;
@@ -36,12 +37,16 @@ public class CommandRemoveAdmins implements CommandExecutor
             return true;
         }
 
-        checkPermission.removeAdmin(player, target);
-        checkPermission.saveAdmin();
-        if(checkPermission.checkIsAdmin(player))
+        if(checkPermission.checkIsAdmin(sender))
         {
+            checkPermission.removeAdmin(player, target);
+            checkPermission.saveAdmin();
             player.sendMessage("Admin removed: " + target.getName());
-
+            return true;
+        }
+        else
+        {
+            player.sendMessage("No permissions!");
         }
 
         return true;

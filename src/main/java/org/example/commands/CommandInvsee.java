@@ -36,11 +36,13 @@ public class CommandInvsee implements CommandExecutor
         if(args.length == 0)
         {
             player.sendMessage("Use /invsee + player");
+            return true;
         }
         Player target = Bukkit.getPlayer(args[0]);
         if(target == null)
         {
             player.sendMessage("Player not found.");
+            return true;
         }
 
         player.openInventory(target.getInventory());

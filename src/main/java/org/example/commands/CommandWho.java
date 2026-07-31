@@ -28,7 +28,7 @@ public class CommandWho implements CommandExecutor
         Player player = (Player) sender;
 
         if(args.length == 0) {
-            if (checkPermission.checkIsAdmin(player)) {
+            if (checkPermission.checkIsAdmin(sender)) {
                 player.sendMessage("Status: Administrator");
                 return true;
             } else {
@@ -44,7 +44,7 @@ public class CommandWho implements CommandExecutor
             return true;
         }
 
-        if (checkPermission.checkIsAdmin(target)) {
+        if (checkPermission.checkIsAdmin(sender)) {
             player.sendMessage("Status: Administrator");
             return true;
         }

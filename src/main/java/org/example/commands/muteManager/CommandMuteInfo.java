@@ -1,0 +1,48 @@
+package org.example.commands.muteManager;
+
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.example.utils.CheckPermission;
+
+public class CommandMuteInfo implements CommandExecutor
+{
+    private final CheckPermission checkPermission;
+    private final MuteManager muteManager;
+
+    public CommandMuteInfo(CheckPermission checkPermission, MuteManager muteManager)
+    {
+        this.checkPermission = checkPermission;
+        this.muteManager = muteManager;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
+    {
+        if(!checkPermission.checkIsAdmin(sender))
+        {
+            sender.sendMessage("No permissions!");
+            return true;
+        }
+
+        if(args.length == 0)
+        {
+            sender.sendMessage("Use /muteinfo <player>");
+            return true;
+        }
+
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
+
+        if(!target.hasPlayedBefore() && !target.isOnline())
+        {
+            sender.sendMessage("Player is not found");
+            return true;
+        }
+
+        muteManager.muteInfo(sender, target);
+
+        return true;
+    }
+}

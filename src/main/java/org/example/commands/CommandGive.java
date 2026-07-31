@@ -7,13 +7,12 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.example.utils.CheckPermission;
 
 public class CommandGive implements CommandExecutor
 {
-    CheckPermission checkPermission;
+    private final CheckPermission checkPermission;
 
 
     public CommandGive(CheckPermission checkPermission)
@@ -32,7 +31,7 @@ public class CommandGive implements CommandExecutor
 
         Player player = (Player) sender;
 
-        if(!checkPermission.checkIsAdmin(player))
+        if(!checkPermission.checkIsAdmin(sender))
         {
             player.sendMessage("No permission");
             return true;
@@ -48,6 +47,12 @@ public class CommandGive implements CommandExecutor
 
 
         Player target = Bukkit.getPlayer(args[0]);
+
+        if(target == null)
+        {
+            player.sendMessage("Player not found");
+            return true;
+        }
 
         Material item = Material.matchMaterial(args[1]);
 
@@ -66,6 +71,12 @@ public class CommandGive implements CommandExecutor
         } catch (NumberFormatException e)
         {
             player.sendMessage("Write correct quantity");
+            return true;
+        }
+
+        if(value <= 0)
+        {
+            player.sendMessage("Quantity must be greater than zero");
             return true;
         }
 

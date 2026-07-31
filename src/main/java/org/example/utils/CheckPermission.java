@@ -2,6 +2,7 @@ package org.example.utils;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.Main;
 
@@ -18,45 +19,75 @@ public class CheckPermission {
     public CheckPermission(Main plugin) {
         this.plugin = plugin;
     }
+    public boolean checkPermission(CommandSender sender, String permission)
+    {
+        return sender.hasPermission(permission);
+    }
 
-    public void loadAdmins() {
+    public void loadAdmins()
+    {
+        admins.clear();
+
         List<String> adminList = plugin.getConfig().getStringList("admins");
 
-        for (String id : adminList) {
-            admins.add(UUID.fromString(id));
+        for (String id : adminList)
+        {
+            try
+            {
+                admins.add(UUID.fromString(id));
+            }
+            catch (IllegalArgumentException exception)
+            {
+                plugin.getLogger().warning("Invalid admin UUID in config: " + id);
+            }
         }
     }
 
     public boolean checkIsAdmin(Player player)
     {
-        admins.contains(player.getUniqueId());
 
-        return admins.contains(player.getUniqueId());
+        return player.hasPermission("minepaper.admin") || admins.contains(player.getUniqueId());
 
     }
+    public boolean checkIsAdmin(UUID uuid)
+    {
+        return admins.contains(uuid);
+    }
+    public boolean checkIsAdmin(CommandSender sender)
+    {
+        if (!(sender instanceof Player player))
+        {
+            return true;
+        }
 
-    public void addAdmin(Player admin, Player target) {
-        if (checkIsAdmin(admin)) {
+        return checkIsAdmin(player);
+    }
+
+    public void addAdmin(Player admin, Player target)
+    {
+        if (checkIsAdmin(admin))
+        {
             admins.add(target.getUniqueId());
+            saveAdmin();
         }
     }
 
 
     public void removeAdmin(Player admin, Player target)
     {
+        if (checkIsAdmin(admin))
+        {
+            admins.remove(target.getUniqueId());
+            saveAdmin();
 
-            if(checkIsAdmin(admin))
+            if (target.getGameMode() != GameMode.SURVIVAL)
             {
-                admins.remove(target.getUniqueId());
+                admin.sendMessage(ChatColor.YELLOW + "Warning: " + target.getName() + " still has gamemode: " + target.getGameMode().name());
+                admin.sendMessage(ChatColor.YELLOW + "Changing gamemode for " + target.getName() + " to survival");
 
-                if(target.getGameMode() != GameMode.SURVIVAL)
-                {
-                    admin.sendMessage(ChatColor.YELLOW + "Warning: " + target.getName() + " still has gamemode: " + target.getGameMode().name());
-                    admin.sendMessage(ChatColor.YELLOW + "Changing gamemode for " +  target.getName() + " to survived");
-                    target.setGameMode(GameMode.SURVIVAL);
-                }
+                target.setGameMode(GameMode.SURVIVAL);
             }
-
+        }
     }
 
 

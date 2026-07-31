@@ -17,9 +17,9 @@ import java.util.Date;
 
 public class CommandBanInfo implements CommandExecutor
 {
-    private CheckPermission checkPermission;
-    private ProfileBanList banList;
-    private DateTimeFormatter formatter;
+    private final CheckPermission checkPermission;
+    private final ProfileBanList banList;
+    private final DateTimeFormatter formatter;
 
     public CommandBanInfo(CheckPermission checkPermission)
     {
@@ -31,22 +31,17 @@ public class CommandBanInfo implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
-        if(!(sender instanceof Player))
-        {
-            return true;
-        }
 
-        Player player = (Player) sender;
 
-        if(!checkPermission.checkIsAdmin(player))
+        if(!checkPermission.checkIsAdmin(sender))
         {
-            player.sendMessage("No permission!");
+            sender.sendMessage("No permission!");
             return true;
         }
 
         if(args.length == 0)
         {
-            player.sendMessage("Use /baninfo <player>");
+            sender.sendMessage("Use /baninfo <player>");
             return true;
         }
 
@@ -57,7 +52,7 @@ public class CommandBanInfo implements CommandExecutor
 
         if(banEntry == null)
         {
-            player.sendMessage("Player " + getTargetName(target, args[0]) + " is not banned.");
+            sender.sendMessage("Player " + getTargetName(target, args[0]) + " is not banned.");
 
             return true;
         }
@@ -84,7 +79,7 @@ public class CommandBanInfo implements CommandExecutor
             expirationDate = formatDate(expiration);
         }
 
-        player.sendMessage("----- Ban information -----\n" +
+        sender.sendMessage("----- Ban information -----\n" +
                         "Player: " + getTargetName(target, args[0]) + "\n" +
                         "UUID: " + target.getUniqueId() + "\n" +
                         "Reason: " + reason + "\n" +

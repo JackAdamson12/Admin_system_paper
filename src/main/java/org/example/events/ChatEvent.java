@@ -8,7 +8,7 @@ import org.example.commands.muteManager.MuteManager;
 
 public class ChatEvent implements Listener
 {
-    private MuteManager muteManager;
+    private final MuteManager muteManager;
 
     public ChatEvent(MuteManager muteManager)
     {
@@ -23,7 +23,7 @@ public class ChatEvent implements Listener
         if(muteManager.isMuted(target.getUniqueId()))
         {
             event.setCancelled(true);
-            target.sendMessage("You are mute!");
+            target.sendMessage("You are muted!");
         }
 
     }

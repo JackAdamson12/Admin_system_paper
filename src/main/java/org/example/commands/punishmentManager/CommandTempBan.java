@@ -8,18 +8,23 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.example.commands.logsManager.PunishmentLogManager;
+import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.utils.CheckPermission;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 
 public class CommandTempBan implements CommandExecutor
 {
-    CheckPermission checkPermission;
-    ProfileBanList banlist;
+    private final CheckPermission checkPermission;
+    private final ProfileBanList banlist;
+    private final PunishmentLogManager punishmentLogManager;
 
-    public CommandTempBan(CheckPermission checkPermission)
+    public CommandTempBan(CheckPermission checkPermission,PunishmentLogManager punishmentLogManager)
     {
+        this.punishmentLogManager = punishmentLogManager;
         this.checkPermission = checkPermission;
         this.banlist = Bukkit.getBanList(BanListType.PROFILE);
     }
@@ -27,26 +32,21 @@ public class CommandTempBan implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
-        if(!(sender instanceof Player))
-        {
-            return true;
-        }
 
-        Player player = (Player) sender;
 
-        if(!checkPermission.checkIsAdmin(player))
+        if(!checkPermission.checkIsAdmin(sender))
         {
-            player.sendMessage("No permission!");
+            sender.sendMessage("No permission!");
             return true;
         }
 
         if(args.length < 3)
         {
-            player.sendMessage("Use /tempban <player> <time> <reason>");
-            player.sendMessage("m = minutes");
-            player.sendMessage("h = hours");
-            player.sendMessage("d = days");
-            player.sendMessage("w = week");
+            sender.sendMessage("Use /tempban <player> <time> <reason>");
+            sender.sendMessage("m = minutes");
+            sender.sendMessage("h = hours");
+            sender.sendMessage("d = days");
+            sender.sendMessage("w = week");
             return true;
         }
 
@@ -54,44 +54,48 @@ public class CommandTempBan implements CommandExecutor
 
         if(!target.hasPlayedBefore() && !target.isOnline())
         {
-            player.sendMessage("Player never played before");
+            sender.sendMessage("Player never played before");
             return true;
         }
 
         if(target.isBanned())
         {
-            player.sendMessage("Player " + target.getName() + " is already banned.\n" + "UUID: " + target.getUniqueId());
+            sender.sendMessage("Player " + target.getName() + " is already banned.\n" + "UUID: " + target.getUniqueId());
             return true;
         }
 
-        if(target.getUniqueId().equals(player.getUniqueId()))
+        if(sender instanceof Player player && target.getUniqueId().equals(player.getUniqueId()))
         {
-            player.sendMessage("You cannot ban yourself.");
+            sender.sendMessage("You cannot ban yourself.");
             return true;
         }
-
         Duration duration = Time(args[1]);
 
         if(duration == null)
         {
-            player.sendMessage("Invalid time. Examples: 10m, 2h, 7d");
+            sender.sendMessage("Invalid time. Examples: 10m, 2h, 7d");
             return true;
         }
 
         String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
 
-        banlist.addBan(target.getPlayerProfile(), reason, duration, player.getName());
+        banlist.addBan(target.getPlayerProfile(), reason, duration, sender.getName());
 
         Player onlineTarget = target.getPlayer();
+
+        Instant createdAt = Instant.now();
+        Instant expiresAt = createdAt.plus(duration);
 
         if(onlineTarget != null)
         {
             onlineTarget.kickPlayer("You have been temporarily banned.\n" + "Time: " + args[1] + "\n" + "Reason: " + reason);
         }
 
+        punishmentLogManager.saveLog(target,reason,sender, PunishmentType.TEMP_BAN, createdAt, expiresAt);
 
 
-        player.sendMessage("Player " + target.getName() + " is banned.\n" + "Time: " + args[1] + "\n" + "Reason: " + reason);
+
+        sender.sendMessage("Player " + target.getName() + " is banned.\n" + "Time: " + args[1] + "\n" + "Reason: " + reason);
 
         return true;
     }

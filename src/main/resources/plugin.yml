@@ -3,6 +3,12 @@ version: 1.0
 main: org.example.Main
 api-version: '1.21'
 
+
+permissions:
+  minepaper.admin:
+    description: Access to all MinePaper commands
+    default: op
+
 commands:
   gm:
     description: Change gamemode
@@ -135,6 +141,23 @@ commands:
   muteinfo:
     description: Information about target mute
     usage: /muteinfo <player>
+
+  mutelog:
+    description: Mute logs
+    usage: /mutelog
+
+  history:
+    description: Player punishment history
+    usage: /history <player>
+
+  panel:
+    description: open admin panel
+    usage: /panel
+
+  moditem:
+    description: Give moderation item for opening panel
+    usage: /moditem
+
 
 
 

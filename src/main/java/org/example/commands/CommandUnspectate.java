@@ -42,7 +42,7 @@ public class CommandUnspectate implements CommandExecutor
 
         Player player = (Player) sender;
 
-        if (!checkPermission.checkIsAdmin(player)) {
+        if (!checkPermission.checkIsAdmin(sender)) {
             player.sendMessage("No permission!");
             return true;
         }

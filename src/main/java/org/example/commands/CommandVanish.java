@@ -63,7 +63,7 @@ public class CommandVanish implements CommandExecutor
 
         Player player = (Player) sender;
 
-        if(!checkPermission.checkIsAdmin(player))
+        if(!checkPermission.checkIsAdmin(sender))
         {
             player.sendMessage(ChatColor.RED + "No permission!");
             return true;

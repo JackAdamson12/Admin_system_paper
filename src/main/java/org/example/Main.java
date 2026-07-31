@@ -1,11 +1,17 @@
 package org.example;
 
 
-import org.bukkit.command.Command;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.example.commands.*;
-import org.example.commands.muteManager.MuteManager;
+import org.example.commands.guiInterface.CommandGuiAdmin;
+import org.example.commands.guiInterface.source.GuiManager;
+import org.example.commands.guiInterface.source.guiListener.GuiListener;
+import org.example.commands.guiInterface.source.searchGui.SearchChatListener;
+import org.example.commands.logsManager.PunishmentLogManager;
+import org.example.commands.moderationItems.CommandModItem;
+import org.example.commands.moderationItems.GiveModeretionItems;
+import org.example.commands.moderationItems.listener.ModerationBookListener;
+import org.example.commands.muteManager.*;
 import org.example.commands.punishmentManager.*;
 import org.example.events.ChatEvent;
 import org.example.events.FreezeEvent;
@@ -13,22 +19,24 @@ import org.example.events.GodModeEvent;
 import org.example.events.VanishEvent;
 import org.example.utils.CheckPermission;
 import org.example.utils.TeleportUtils;
+import org.example.commands.logsManager.CommandMuteLog;
+import org.example.commands.logsManager.CommandHistory;
 
-import java.nio.file.Path;
 
 public final class Main extends JavaPlugin
 {
     private CheckPermission checkPermission;
-
+    private PunishmentLogManager punishmentLogManager;
+    private GuiManager guiManager;
 
     @Override
     public void onEnable()
     {
         saveDefaultConfig();
 
-        saveResource("adminfo.txt", false);
-
         checkPermission = new CheckPermission(this);
+        punishmentLogManager = new PunishmentLogManager(this);
+        guiManager = new GuiManager(checkPermission,this);
         checkPermission.loadAdmins();
 
         //Teleport
@@ -36,7 +44,6 @@ public final class Main extends JavaPlugin
         getCommand("tpall").setExecutor(new CommandTpAll(checkPermission, teleportUtils));
         getCommand("ttp").setExecutor(new CommandTpPlayerToPlayer(checkPermission, teleportUtils));
         getCommand("tphere").setExecutor(new CommandTpHere(checkPermission,teleportUtils));
-        getCommand("tpall").setExecutor(new CommandTpAll(checkPermission,teleportUtils));
         getCommand("tp").setExecutor(new CommandTp(checkPermission,teleportUtils));
 
         //Add or delete admins(first admin adding manual)
@@ -59,7 +66,7 @@ public final class Main extends JavaPlugin
         CommandVanish commandVanish = new CommandVanish(this,checkPermission);
         getCommand("vanish").setExecutor(commandVanish);
         getServer().getPluginManager().registerEvents(new VanishEvent(commandVanish), this);
-        getCommand("kick").setExecutor(new CommandKick(checkPermission));
+        getCommand("kick").setExecutor(new CommandKick(checkPermission,punishmentLogManager));
         //Spectate
         CommandSpectate commandSpectate = new CommandSpectate(checkPermission,this);
         getCommand("spectate").setExecutor(commandSpectate);
@@ -86,18 +93,37 @@ public final class Main extends JavaPlugin
         getCommand("adminfo").setExecutor(new CommandAdminInfo(checkPermission, this));
 
         //Ban
-        getCommand("ban").setExecutor(new CommandBan(checkPermission));
-        getCommand("pardon").setExecutor(new CommandUnban(checkPermission));
+        CommandBan commandBan = new CommandBan(checkPermission,punishmentLogManager);
+        getCommand("ban").setExecutor(commandBan);
+        getCommand("pardon").setExecutor(new CommandUnban(checkPermission,punishmentLogManager));
         getCommand("baninfo").setExecutor(new CommandBanInfo(checkPermission));
-        getCommand("tempban").setExecutor(new CommandTempBan(checkPermission));
+        getCommand("tempban").setExecutor(new CommandTempBan(checkPermission,punishmentLogManager));
 
         //Mute
         MuteManager muteManager = new MuteManager(this);
-        getCommand("mute").setExecutor(new CommandMute(checkPermission,muteManager));
-        getCommand("tmute").setExecutor(new CommandTempMute(checkPermission,muteManager));
-        getCommand("unmute").setExecutor(new CommandUnmute(checkPermission,muteManager));
+        CommandMute commandMute = new CommandMute(checkPermission,muteManager,punishmentLogManager,guiManager);
+        getCommand("mute").setExecutor(commandMute);
+        getCommand("tmute").setExecutor(new CommandTempMute(checkPermission,muteManager,punishmentLogManager));
+        getCommand("unmute").setExecutor(new CommandUnmute(checkPermission,muteManager,punishmentLogManager));
         getCommand("muteinfo").setExecutor(new CommandMuteInfo(checkPermission, muteManager));
+        getCommand("mutelog").setExecutor(new CommandMuteLog(checkPermission, punishmentLogManager));
         getServer().getPluginManager().registerEvents(new ChatEvent(muteManager),this);
+
+        //PunishmentLogs
+        getCommand("history").setExecutor(new CommandHistory(checkPermission, punishmentLogManager));
+
+
+        // GUI
+        getServer().getPluginManager().registerEvents(new GuiListener(guiManager,commandMute,commandBan), this);
+        getServer().getPluginManager().registerEvents(new SearchChatListener(guiManager), this);
+        getCommand("panel").setExecutor(new CommandGuiAdmin(checkPermission, guiManager));
+
+        //ModerationItems
+        GiveModeretionItems moderationItems = new GiveModeretionItems(this, guiManager);
+        getServer().getPluginManager().registerEvents(moderationItems, this);
+        getCommand("moditem").setExecutor(new CommandModItem(checkPermission,moderationItems));
+        getServer().getPluginManager().registerEvents(new ModerationBookListener(guiManager, checkPermission), this);
+
 
 
 

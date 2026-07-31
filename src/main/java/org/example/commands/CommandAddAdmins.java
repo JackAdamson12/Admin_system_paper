@@ -25,7 +25,7 @@ public class CommandAddAdmins  implements CommandExecutor {
 
         Player player = (Player) sender;
 
-        if(!checkPermission.checkIsAdmin(player))
+        if(!checkPermission.checkIsAdmin(sender))
         {
             return true;
         }
