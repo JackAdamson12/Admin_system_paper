@@ -9,6 +9,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.commands.guiInterface.source.GuiManager;
 import org.example.commands.guiInterface.source.utils.GuiTitles;
 import org.example.commands.muteManager.CommandMute;
@@ -19,16 +20,19 @@ public class GuiListener implements Listener
     private final GuiManager guiManager;
     private final CommandMute commandMute;
     private final CommandBan commandBan;
+    private final CommandRestrictionManager commandRestrictionManager;
 
     public GuiListener(
             GuiManager guiManager,
             CommandMute commandMute,
-            CommandBan commandBan
+            CommandBan commandBan,
+            CommandRestrictionManager commandRestrictionManager
     )
     {
         this.guiManager = guiManager;
         this.commandMute = commandMute;
         this.commandBan = commandBan;
+        this.commandRestrictionManager = commandRestrictionManager;
     }
 
     @EventHandler
@@ -119,24 +123,49 @@ public class GuiListener implements Listener
         switch(event.getSlot())
         {
             case 1:
+                if(isDisabled("ban", admin))
+                {
+                    return;
+                }
+
                 commandBan.getBan(admin, target);
                 closeAndClear(admin);
                 break;
 
             case 2:
+                if(isDisabled("tempban", admin))
+                {
+                    return;
+                }
+
                 guiManager.openTempBanPanel(admin);
                 break;
 
             case 3:
+                if(isDisabled("mute", admin))
+                {
+                    return;
+                }
+
                 commandMute.getMute(admin, target);
                 closeAndClear(admin);
                 break;
 
             case 4:
+                if(isDisabled("tmute", admin))
+                {
+                    return;
+                }
+
                 guiManager.openTempMutePanel(admin);
                 break;
 
             case 5:
+                if(isDisabled("kick", admin))
+                {
+                    return;
+                }
+
                 target.kickPlayer("Kicked by admin");
                 closeAndClear(admin);
                 break;
@@ -190,6 +219,11 @@ public class GuiListener implements Listener
         if(duration == null)
             return;
 
+        if(isDisabled("tempban", admin))
+        {
+            return;
+        }
+
         boolean executed = Bukkit.dispatchCommand(admin, "tempban " + target.getName() + " " + duration + " Punished from admin GUI");
 
         if(!executed)
@@ -240,6 +274,11 @@ public class GuiListener implements Listener
         if(duration == null)
             return;
 
+        if(isDisabled("tmute", admin))
+        {
+            return;
+        }
+
         boolean executed = Bukkit.dispatchCommand(admin, "tmute " + target.getName() + " " + duration + " Punished from admin GUI");
 
         if(!executed)
@@ -284,6 +323,17 @@ public class GuiListener implements Listener
             case 16 -> "7d";
             default -> null;
         };
+    }
+
+    private boolean isDisabled(String command, Player admin)
+    {
+        if(!commandRestrictionManager.isDisabled(command, admin))
+        {
+            return false;
+        }
+
+        admin.sendMessage("§cCommand " + command + " is disabled.");
+        return true;
     }
 
     private void closeAndClear(Player admin)

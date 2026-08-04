@@ -8,21 +8,13 @@ import org.example.Main;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class CommandRestrictionManager
 {
     private final Main plugin;
     private final File file;
     private final FileConfiguration config;
-
     private final Map<String, Set<UUID>> restrictions = new HashMap<>();
 
     public CommandRestrictionManager(Main plugin)
@@ -43,8 +35,7 @@ public class CommandRestrictionManager
             }
             catch(IOException exception)
             {
-                plugin.getLogger().severe("Could not create command-restrictions.yml");
-
+                plugin.getLogger().severe("Error with command-restrictions.yml");
                 exception.printStackTrace();
             }
         }
@@ -55,36 +46,55 @@ public class CommandRestrictionManager
     }
 
 
-
-    public void blockPlayer(String command, Player player)
+    public void saveData(String command, Player blockedPlayer)
     {
-        if(command == null || command.isBlank() || player == null)
+        if(command == null || command.isBlank())
+        {
+            return;
+        }
+
+        if(blockedPlayer == null)
         {
             return;
         }
 
         command = command.toLowerCase();
 
-        Set<UUID> blockedPlayers = restrictions.get(command);
+        Set<UUID> blockedPlayers;
 
-
-        if(blockedPlayers != null && blockedPlayers.isEmpty())
+        if(restrictions.containsKey(command))
         {
-            return;
-        }
+            blockedPlayers = restrictions.get(command);
 
-        if(blockedPlayers == null)
+
+            if(blockedPlayers.isEmpty())
+            {
+                return;
+            }
+        }
+        else
         {
             blockedPlayers = new HashSet<>();
+            blockedPlayers.add(blockedPlayer.getUniqueId());
             restrictions.put(command, blockedPlayers);
         }
 
-        blockedPlayers.add(player.getUniqueId());
 
-        saveCommandPlayers(command, blockedPlayers);
+        String path = "commands." + command + ".blocked_players";
+
+        List<String> uuidList = new ArrayList<>();
+
+        for(UUID uuid : blockedPlayers)
+        {
+            uuidList.add(uuid.toString());
+        }
+
+        config.set(path, uuidList);
+
+        saveFile();
     }
 
-    public void blockCommandForEveryone(String command)
+    public void saveData(String command)
     {
         if(command == null || command.isBlank())
         {
@@ -96,72 +106,51 @@ public class CommandRestrictionManager
 
         restrictions.put(command, new HashSet<>());
 
-        config.set("commands." + command + ".blocked-players", Collections.emptyList());
+        config.set("commands." + command + ".blocked_players", Collections.emptyList());
 
         saveFile();
     }
 
-    public void removePlayer(String command, Player player)
+
+    public void loadData()
     {
-        if(command == null || command.isBlank() || player == null)
+        restrictions.clear();
+
+        ConfigurationSection commandSection = config.getConfigurationSection("commands");
+
+        if(commandSection == null)
         {
             return;
         }
 
-        command = command.toLowerCase();
+        Set<String> allCommands = commandSection.getKeys(false);
 
-        Set<UUID> blockedPlayers = restrictions.get(command);
-
-        if(blockedPlayers == null)
+        for(String command : allCommands)
         {
-            return;
+            Set<UUID> uuids = new HashSet<>();
+
+            List<String> savedUuids = config.getStringList("commands." + command + ".blocked_players");
+
+            for(String strUuid : savedUuids)
+            {
+                try
+                {
+                    uuids.add(UUID.fromString(strUuid));
+                }
+                catch(IllegalArgumentException exception)
+                {
+                    plugin.getLogger().warning("Invalid UUID for command " + command + ": " + strUuid);
+                }
+            }
+
+            restrictions.put(command.toLowerCase(), uuids);
         }
-
-
-        if(blockedPlayers.isEmpty())
-        {
-            return;
-        }
-
-        boolean removed = blockedPlayers.remove(player.getUniqueId());
-
-        if(!removed)
-        {
-            return;
-        }
-
-        String path = "commands." + command;
-
-
-        if(blockedPlayers.isEmpty())
-        {
-            restrictions.remove(command);
-            config.set(path, null);
-            saveFile();
-            return;
-        }
-
-        saveCommandPlayers(command, blockedPlayers);
     }
 
-    public void enableCommand(String command)
-    {
-        if(command == null || command.isBlank())
-        {
-            return;
-        }
-
-        command = command.toLowerCase();
-
-        restrictions.remove(command);
-        config.set("commands." + command, null);
-
-        saveFile();
-    }
 
     public boolean isDisabled(String command, Player player)
     {
-        if(command == null || command.isBlank() || player == null)
+        if(command == null || command.isBlank())
         {
             return false;
         }
@@ -182,46 +171,82 @@ public class CommandRestrictionManager
             return true;
         }
 
+        if(player == null)
+        {
+            return false;
+        }
+
         return blockedPlayers.contains(player.getUniqueId());
     }
 
-    public void loadData()
+    public boolean isCommandRestricted(String command)
     {
-        restrictions.clear();
+        if(command == null || command.isBlank())
+        {
+            return false;
+        }
 
-        ConfigurationSection commandsSection = config.getConfigurationSection("commands");
+        command = command.toLowerCase();
 
-        if(commandsSection == null)
+        return restrictions.containsKey(command);
+    }
+
+    public boolean isCommandDisabledForPlayer(String command, Player player)
+    {
+        if(command == null || command.isBlank() || player == null)
+        {
+            return false;
+        }
+
+        command = command.toLowerCase();
+
+        Set<UUID> blockedPlayers = restrictions.get(command);
+
+        if(blockedPlayers == null)
+        {
+            return false;
+        }
+
+
+        if(blockedPlayers.isEmpty())
+        {
+            return false;
+        }
+
+        return blockedPlayers.contains(player.getUniqueId());
+    }
+
+    public void addPlayer(String command, Player player)
+    {
+        if(command == null || command.isBlank() || player == null)
         {
             return;
         }
 
-        Set<String> allCommands = commandsSection.getKeys(false);
+        command = command.toLowerCase();
 
-        for(String command : allCommands)
+
+        if(restrictions.containsKey(command) && restrictions.get(command).isEmpty())
         {
-            Set<UUID> blockedPlayers = new HashSet<>();
-
-            List<String> savedUuids = config.getStringList("commands." + command + ".blocked-players");
-
-            for(String savedUuid : savedUuids)
-            {
-                try
-                {
-                    blockedPlayers.add(UUID.fromString(savedUuid));
-                }
-                catch(IllegalArgumentException exception)
-                {
-                    plugin.getLogger().warning("Invalid UUID for command " + command + ": " + savedUuid);
-                }
-            }
-
-            restrictions.put(command.toLowerCase(), blockedPlayers);
+            return;
         }
-    }
 
-    private void saveCommandPlayers(String command, Set<UUID> blockedPlayers)
-    {
+        if(!restrictions.containsKey(command))
+        {
+            Set<UUID> addingPlayers = new HashSet<>();
+            addingPlayers.add(player.getUniqueId());
+
+            restrictions.put(command, addingPlayers);
+        }
+        else
+        {
+            restrictions.get(command)
+                    .add(player.getUniqueId());
+        }
+
+        Set<UUID> blockedPlayers =
+                restrictions.get(command);
+
         List<String> uuidList = new ArrayList<>();
 
         for(UUID uuid : blockedPlayers)
@@ -229,7 +254,79 @@ public class CommandRestrictionManager
             uuidList.add(uuid.toString());
         }
 
-        config.set("commands." + command + ".blocked-players", uuidList);
+        config.set("commands." + command + ".blocked_players", uuidList);
+
+        saveFile();
+    }
+
+    public void removeCommand(String command)
+    {
+        if(command == null || command.isBlank())
+        {
+            return;
+        }
+
+        command = command.toLowerCase();
+
+        if(!restrictions.containsKey(command))
+        {
+            return;
+        }
+
+        restrictions.remove(command);
+
+        config.set("commands." + command, null);
+
+        saveFile();
+    }
+
+    public void removePlayer(String command, Player player)
+    {
+        if(command == null || command.isBlank() || player == null)
+        {
+            return;
+        }
+
+        command = command.toLowerCase();
+
+        Set<UUID> blockedPlayers = restrictions.get(command);
+
+        if(blockedPlayers == null)
+        {
+            return;
+        }
+
+        if(blockedPlayers.isEmpty())
+        {
+            return;
+        }
+
+        boolean removed = blockedPlayers.remove(player.getUniqueId());
+
+        if(!removed)
+        {
+            return;
+        }
+
+        String path = "commands." + command;
+
+
+        if(blockedPlayers.isEmpty())
+        {
+            restrictions.remove(command);
+            config.set(path, null);
+        }
+        else
+        {
+            List<String> uuidList = new ArrayList<>();
+
+            for(UUID uuid : blockedPlayers)
+            {
+                uuidList.add(uuid.toString());
+            }
+
+            config.set(path + ".blocked_players", uuidList);
+        }
 
         saveFile();
     }
@@ -243,7 +340,6 @@ public class CommandRestrictionManager
         catch(IOException exception)
         {
             plugin.getLogger().severe("Could not save command-restrictions.yml");
-
             exception.printStackTrace();
         }
     }

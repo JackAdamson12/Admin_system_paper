@@ -5,7 +5,9 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.example.commands.logsManager.punishmentLogData.PunishmentData;
+import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.utils.CheckPermission;
 
 import java.time.ZoneId;
@@ -15,11 +17,14 @@ import java.util.List;
 
 public class CommandHistory implements CommandExecutor
 {
+    private final CommandRestrictionManager commandRestrictionManager;
+
     private final CheckPermission checkPermission;
     private final PunishmentLogManager punishmentLogManager;
 
-    public CommandHistory(CheckPermission checkPermission, PunishmentLogManager punishmentLogManager)
+    public CommandHistory(CheckPermission checkPermission, PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager)
     {
+        this.commandRestrictionManager = commandRestrictionManager;
         this.checkPermission = checkPermission;
         this.punishmentLogManager = punishmentLogManager;
     }
@@ -27,6 +32,19 @@ public class CommandHistory implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
+        Player restrictionPlayer = null;
+
+        if(sender instanceof Player)
+        {
+            restrictionPlayer = (Player) sender;
+        }
+
+        if(commandRestrictionManager.isDisabled(command.getName(), restrictionPlayer))
+        {
+            sender.sendMessage("This command is disabled.");
+            return true;
+        }
+
         if(!checkPermission.checkIsAdmin(sender))
         {
             sender.sendMessage("No permissions!");

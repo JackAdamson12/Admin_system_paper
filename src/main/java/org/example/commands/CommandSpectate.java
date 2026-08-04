@@ -8,6 +8,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.Main;
+import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.utils.CheckPermission;
 
 import java.util.HashMap;
@@ -15,14 +16,17 @@ import java.util.UUID;
 
 public class CommandSpectate implements CommandExecutor
 {
+    private final CommandRestrictionManager commandRestrictionManager;
+
     private final CheckPermission checkPermission;
     private final Main plugin;
 
     private final HashMap<UUID, Location> oldPositions = new HashMap<>();
     private final HashMap<UUID, GameMode> oldGameModes = new HashMap<>();
 
-    public CommandSpectate(CheckPermission checkPermission, Main plugin)
+    public CommandSpectate(CheckPermission checkPermission, Main plugin, CommandRestrictionManager commandRestrictionManager)
     {
+        this.commandRestrictionManager = commandRestrictionManager;
         this.checkPermission = checkPermission;
         this.plugin = plugin;
     }
@@ -62,6 +66,19 @@ public class CommandSpectate implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
+        Player restrictionPlayer = null;
+
+        if(sender instanceof Player)
+        {
+            restrictionPlayer = (Player) sender;
+        }
+
+        if(commandRestrictionManager.isDisabled(command.getName(), restrictionPlayer))
+        {
+            sender.sendMessage("This command is disabled.");
+            return true;
+        }
+
         if(!(sender instanceof Player))
         {
             return true;

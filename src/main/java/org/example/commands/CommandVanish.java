@@ -7,6 +7,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.Main;
+import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.utils.CheckPermission;
 
 import java.util.HashSet;
@@ -14,14 +15,17 @@ import java.util.UUID;
 
 public class CommandVanish implements CommandExecutor
 {
+    private final CommandRestrictionManager commandRestrictionManager;
+
     public HashSet<UUID> vanishList = new HashSet<>();
 
     private final Main plugin;
 
     private final CheckPermission checkPermission;
 
-    public CommandVanish(Main plugin, CheckPermission checkPermission)
+    public CommandVanish(Main plugin, CheckPermission checkPermission, CommandRestrictionManager commandRestrictionManager)
     {
+        this.commandRestrictionManager = commandRestrictionManager;
         this.plugin = plugin;
         this.checkPermission = checkPermission;
     }
@@ -56,6 +60,19 @@ public class CommandVanish implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
+        Player restrictionPlayer = null;
+
+        if(sender instanceof Player)
+        {
+            restrictionPlayer = (Player) sender;
+        }
+
+        if(commandRestrictionManager.isDisabled(command.getName(), restrictionPlayer))
+        {
+            sender.sendMessage("This command is disabled.");
+            return true;
+        }
+
         if(!(sender instanceof Player))
         {
             return true;

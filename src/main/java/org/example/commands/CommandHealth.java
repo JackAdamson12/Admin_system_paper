@@ -7,15 +7,19 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import org.bukkit.ChatColor;
+import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.utils.CheckPermission;
 
 public class CommandHealth implements CommandExecutor
 {
+    private final CommandRestrictionManager commandRestrictionManager;
+
 
     private final CheckPermission checkPermission;
 
-    public CommandHealth(CheckPermission checkPermission)
+    public CommandHealth(CheckPermission checkPermission, CommandRestrictionManager commandRestrictionManager)
     {
+        this.commandRestrictionManager = commandRestrictionManager;
         this.checkPermission = checkPermission;
     }
 
@@ -28,6 +32,19 @@ public class CommandHealth implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
+        Player restrictionPlayer = null;
+
+        if(sender instanceof Player)
+        {
+            restrictionPlayer = (Player) sender;
+        }
+
+        if(commandRestrictionManager.isDisabled(command.getName(), restrictionPlayer))
+        {
+            sender.sendMessage("This command is disabled.");
+            return true;
+        }
+
         if(!(sender instanceof Player))
         {
             return true;

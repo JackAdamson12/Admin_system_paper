@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
+import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.utils.CheckPermission;
 
 import java.time.Duration;
@@ -18,12 +19,15 @@ import java.util.Arrays;
 
 public class CommandTempBan implements CommandExecutor
 {
+    private final CommandRestrictionManager commandRestrictionManager;
+
     private final CheckPermission checkPermission;
     private final ProfileBanList banlist;
     private final PunishmentLogManager punishmentLogManager;
 
-    public CommandTempBan(CheckPermission checkPermission,PunishmentLogManager punishmentLogManager)
+    public CommandTempBan(CheckPermission checkPermission,PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager)
     {
+        this.commandRestrictionManager = commandRestrictionManager;
         this.punishmentLogManager = punishmentLogManager;
         this.checkPermission = checkPermission;
         this.banlist = Bukkit.getBanList(BanListType.PROFILE);
@@ -32,6 +36,19 @@ public class CommandTempBan implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
+        Player restrictionPlayer = null;
+
+        if(sender instanceof Player)
+        {
+            restrictionPlayer = (Player) sender;
+        }
+
+        if(commandRestrictionManager.isDisabled(command.getName(), restrictionPlayer))
+        {
+            sender.sendMessage("This command is disabled.");
+            return true;
+        }
+
 
 
         if(!checkPermission.checkIsAdmin(sender))

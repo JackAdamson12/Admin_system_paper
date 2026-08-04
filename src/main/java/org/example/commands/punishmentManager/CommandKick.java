@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
+import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.utils.CheckPermission;
 
 import java.time.Instant;
@@ -14,11 +15,14 @@ import java.util.Arrays;
 
 public class CommandKick implements CommandExecutor
 {
+    private final CommandRestrictionManager commandRestrictionManager;
+
     private final CheckPermission checkPermission;
     private final PunishmentLogManager punishmentLogManager;
 
-    public CommandKick(CheckPermission checkPermission, PunishmentLogManager punishmentLogManager)
+    public CommandKick(CheckPermission checkPermission, PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager)
     {
+        this.commandRestrictionManager = commandRestrictionManager;
         this.punishmentLogManager = punishmentLogManager;
         this.checkPermission = checkPermission;
     }
@@ -27,6 +31,19 @@ public class CommandKick implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
+        Player restrictionPlayer = null;
+
+        if(sender instanceof Player)
+        {
+            restrictionPlayer = (Player) sender;
+        }
+
+        if(commandRestrictionManager.isDisabled(command.getName(), restrictionPlayer))
+        {
+            sender.sendMessage("This command is disabled.");
+            return true;
+        }
+
 
 
         if(!checkPermission.checkIsAdmin(sender))
