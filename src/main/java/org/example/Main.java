@@ -6,6 +6,7 @@ import org.example.commands.*;
 import org.example.commands.commandRestriction.CommandDisableCmd;
 import org.example.commands.commandRestriction.CommandEnableCmd;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
+import org.example.commands.commandTerminal.CommandReloadPlayerProfile;
 import org.example.commands.guiInterface.CommandGuiAdmin;
 import org.example.commands.guiInterface.source.GuiManager;
 import org.example.commands.guiInterface.source.guiListener.GuiListener;
@@ -16,10 +17,15 @@ import org.example.commands.moderationItems.GiveModeretionItems;
 import org.example.commands.moderationItems.listener.ModerationBookListener;
 import org.example.commands.muteManager.*;
 import org.example.commands.punishmentManager.*;
+import org.example.commands.roleCommand.CommandDemoteRole;
+import org.example.commands.roleCommand.CommandPromoteRole;
 import org.example.events.ChatEvent;
 import org.example.events.FreezeEvent;
 import org.example.events.GodModeEvent;
 import org.example.events.VanishEvent;
+import org.example.luckPerms.role.RoleManager;
+import org.example.playerProfile.PlayerProfileManager;
+import org.example.playerProfile.listener.PlayerProfileListener;
 import org.example.utils.CheckPermission;
 import org.example.utils.TeleportUtils;
 import org.example.commands.logsManager.CommandMuteLog;
@@ -31,6 +37,8 @@ public final class Main extends JavaPlugin
     private CheckPermission checkPermission;
     private PunishmentLogManager punishmentLogManager;
     private GuiManager guiManager;
+    private RoleManager roleManager;
+    private PlayerProfileManager playerProfileManager;
 
     @Override
     public void onEnable()
@@ -42,6 +50,9 @@ public final class Main extends JavaPlugin
         guiManager = new GuiManager(checkPermission,this);
         CommandRestrictionManager commandRestrictionManager = new CommandRestrictionManager(this);
         checkPermission.loadAdmins();
+
+        playerProfileManager = new PlayerProfileManager(this);
+        roleManager = new RoleManager(playerProfileManager);
 
         //Teleport
         TeleportUtils teleportUtils = new TeleportUtils();
@@ -132,6 +143,16 @@ public final class Main extends JavaPlugin
         getCommand("disable").setExecutor(new CommandDisableCmd(checkPermission,commandRestrictionManager));
         getCommand("enable").setExecutor(new CommandEnableCmd(checkPermission,commandRestrictionManager));
 
+        //Role
+        getServer().getPluginManager().registerEvents(new PlayerProfileListener(playerProfileManager),this);
+        //test
+        getCommand("promote").setExecutor(new CommandPromoteRole(checkPermission,playerProfileManager,roleManager));
+        getCommand("demote").setExecutor(new CommandDemoteRole(checkPermission,playerProfileManager,roleManager));
+
+
+
+        //TerminalCommands
+        getCommand("reload").setExecutor(new CommandReloadPlayerProfile(playerProfileManager));
 
 
 

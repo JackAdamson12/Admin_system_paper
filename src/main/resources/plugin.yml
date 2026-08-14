@@ -166,6 +166,17 @@ commands:
     description: Enable command an all server of for admin
     usage: /enable <command> + <player>
 
+  promote:
+    description: Promote role
+    usage: /promote <player>
+
+  demote:
+    description: Demote role
+    usage: /demote <player>
+
+  reload:
+    description: Reload MinePaper data
+    usage: /reload -p
 
 
 
