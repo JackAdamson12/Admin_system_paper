@@ -1,4 +1,4 @@
-package org.example.commands.punishmentManager;
+package org.example.commands.punishmentManager.banManager;
 
 import io.papermc.paper.ban.BanListType;
 import org.bukkit.Bukkit;
@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 import java.time.Instant;
 
@@ -49,7 +49,7 @@ public class CommandUnban implements CommandExecutor
 
 
 
-        if(!checkPermission.checkIsAdmin(sender))
+        if(!checkPermission.checkPermission(sender,command.getName()))
         {
             sender.sendMessage("No permission!");
             return true;

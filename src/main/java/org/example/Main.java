@@ -15,18 +15,24 @@ import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.moderationItems.CommandModItem;
 import org.example.commands.moderationItems.GiveModeretionItems;
 import org.example.commands.moderationItems.listener.ModerationBookListener;
-import org.example.commands.muteManager.*;
-import org.example.commands.punishmentManager.*;
+import org.example.commands.punishmentManager.PunishmentManager;
+import org.example.commands.punishmentManager.banManager.*;
+import org.example.commands.punishmentManager.muteManager.*;
 import org.example.commands.roleCommand.CommandDemoteRole;
 import org.example.commands.roleCommand.CommandPromoteRole;
+import org.example.commands.roleCommand.CommandSetOwner;
 import org.example.events.ChatEvent;
 import org.example.events.FreezeEvent;
 import org.example.events.GodModeEvent;
 import org.example.events.VanishEvent;
 import org.example.luckPerms.role.RoleManager;
+import org.example.playerInfoCommand.CommandPlayerInfo;
+import org.example.playerInfoCommand.sourse.PlayerInfoManager;
 import org.example.playerProfile.PlayerProfileManager;
 import org.example.playerProfile.listener.PlayerProfileListener;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
+import org.example.reports.CommandReport;
+import org.example.reports.sourse.ReportManager;
 import org.example.utils.TeleportUtils;
 import org.example.commands.logsManager.CommandMuteLog;
 import org.example.commands.logsManager.CommandHistory;
@@ -39,20 +45,31 @@ public final class Main extends JavaPlugin
     private GuiManager guiManager;
     private RoleManager roleManager;
     private PlayerProfileManager playerProfileManager;
+    private MuteManager muteManager;
+    private PunishmentManager punishmentManager;
+    private PlayerInfoManager playerInfoManager;
 
     @Override
     public void onEnable()
     {
         saveDefaultConfig();
 
-        checkPermission = new CheckPermission(this);
-        punishmentLogManager = new PunishmentLogManager(this);
-        guiManager = new GuiManager(checkPermission,this);
-        CommandRestrictionManager commandRestrictionManager = new CommandRestrictionManager(this);
-        checkPermission.loadAdmins();
-
+        muteManager = new MuteManager(this);
+        punishmentManager = new PunishmentManager(muteManager);
         playerProfileManager = new PlayerProfileManager(this);
         roleManager = new RoleManager(playerProfileManager);
+        checkPermission = new CheckPermission(this,playerProfileManager);
+        ReportManager reportManager = new ReportManager(checkPermission,playerProfileManager,punishmentManager,this);
+        punishmentLogManager = new PunishmentLogManager(this);
+        guiManager = new GuiManager(checkPermission,playerProfileManager,this,reportManager);
+        CommandRestrictionManager commandRestrictionManager = new CommandRestrictionManager(this);
+        playerInfoManager = new PlayerInfoManager(this);
+        checkPermission.loadAdmins();
+
+
+
+
+
 
         //Teleport
         TeleportUtils teleportUtils = new TeleportUtils();
@@ -61,13 +78,10 @@ public final class Main extends JavaPlugin
         getCommand("tphere").setExecutor(new CommandTpHere(checkPermission,teleportUtils,commandRestrictionManager));
         getCommand("tp").setExecutor(new CommandTp(checkPermission,teleportUtils,commandRestrictionManager));
 
-        //Add or delete admins(first admin adding manual)
-        getCommand("addadmin").setExecutor(new CommandAddAdmins(checkPermission,commandRestrictionManager));
-        getCommand("rmadmin").setExecutor(new CommandRemoveAdmins(checkPermission,commandRestrictionManager));
 
         // id player and status player
         getCommand("uuid").setExecutor(new CommandUUID(checkPermission,commandRestrictionManager));
-        getCommand("who").setExecutor(new CommandWho(checkPermission,commandRestrictionManager));
+        getCommand("who").setExecutor(new CommandWho(checkPermission,commandRestrictionManager,playerProfileManager));
 
         //switch game mode, heal player, get flying mode
         getCommand("gm").setExecutor(new ChangeGameMode(checkPermission,commandRestrictionManager));
@@ -106,6 +120,7 @@ public final class Main extends JavaPlugin
 
         //Info
         getCommand("adminfo").setExecutor(new CommandAdminInfo(checkPermission, this,commandRestrictionManager));
+        getCommand("info").setExecutor(new CommandPlayerInfo(checkPermission,playerInfoManager,playerProfileManager));
 
         //Ban
         CommandBan commandBan = new CommandBan(checkPermission,punishmentLogManager,commandRestrictionManager);
@@ -115,7 +130,6 @@ public final class Main extends JavaPlugin
         getCommand("tempban").setExecutor(new CommandTempBan(checkPermission,punishmentLogManager,commandRestrictionManager));
 
         //Mute
-        MuteManager muteManager = new MuteManager(this);
         CommandMute commandMute = new CommandMute(checkPermission,muteManager,punishmentLogManager,guiManager,commandRestrictionManager);
         getCommand("mute").setExecutor(commandMute);
         getCommand("tmute").setExecutor(new CommandTempMute(checkPermission,muteManager,punishmentLogManager,commandRestrictionManager));
@@ -129,7 +143,7 @@ public final class Main extends JavaPlugin
 
 
         // GUI
-        getServer().getPluginManager().registerEvents(new GuiListener(guiManager,commandMute,commandBan,commandRestrictionManager), this);
+        getServer().getPluginManager().registerEvents(new GuiListener(guiManager,commandMute,commandBan,commandRestrictionManager,checkPermission), this);
         getServer().getPluginManager().registerEvents(new SearchChatListener(guiManager), this);
         getCommand("panel").setExecutor(new CommandGuiAdmin(checkPermission, guiManager,commandRestrictionManager));
 
@@ -145,9 +159,13 @@ public final class Main extends JavaPlugin
 
         //Role
         getServer().getPluginManager().registerEvents(new PlayerProfileListener(playerProfileManager),this);
-        //test
         getCommand("promote").setExecutor(new CommandPromoteRole(checkPermission,playerProfileManager,roleManager));
         getCommand("demote").setExecutor(new CommandDemoteRole(checkPermission,playerProfileManager,roleManager));
+        getCommand("setowner").setExecutor(new CommandSetOwner(playerProfileManager));
+
+
+        //report
+        getCommand("report").setExecutor(new CommandReport(reportManager,checkPermission, playerProfileManager));
 
 
 

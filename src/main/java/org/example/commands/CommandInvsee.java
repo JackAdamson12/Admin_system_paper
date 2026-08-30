@@ -6,7 +6,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 public class CommandInvsee implements CommandExecutor
 {
@@ -44,7 +44,7 @@ public class CommandInvsee implements CommandExecutor
         }
         Player player = (Player) sender;
 
-        if(!checkPermission.checkIsAdmin(player))
+        if(!checkPermission.checkPermission(sender,command.getName()))
         {
             player.sendMessage("No permission!");
             return true;

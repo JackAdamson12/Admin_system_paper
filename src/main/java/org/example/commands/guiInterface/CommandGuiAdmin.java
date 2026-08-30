@@ -6,7 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.commands.guiInterface.source.GuiManager;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 public class CommandGuiAdmin implements CommandExecutor
 {
@@ -46,9 +46,9 @@ public class CommandGuiAdmin implements CommandExecutor
 
         Player player = (Player) sender;
 
-        if(!checkPermission.checkIsAdmin(player))
+        if(!checkPermission.checkPermission(sender,command.getName()))
         {
-            sender.sendMessage("No permissions");
+            sender.sendMessage("No permission!");
             return true;
         }
 

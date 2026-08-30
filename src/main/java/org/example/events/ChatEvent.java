@@ -4,7 +4,7 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.example.commands.muteManager.MuteManager;
+import org.example.commands.punishmentManager.muteManager.MuteManager;
 
 public class ChatEvent implements Listener
 {

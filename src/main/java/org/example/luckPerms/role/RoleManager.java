@@ -70,6 +70,12 @@ public class RoleManager
 
         StaffRole newRole = StaffRole.getRoleByLevel(newLevel);
 
+        if(newRole == actor.getStaffRole())
+        {
+            //добавить описаниеЫ
+            return false;
+        }
+
         if(!canSetRole(actor, newRole))
         {
             return false;

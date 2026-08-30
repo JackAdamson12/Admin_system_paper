@@ -1,24 +1,33 @@
-package org.example.commands;
+package org.example.commands.punishmentManager.banManager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.example.commands.logsManager.PunishmentLogManager;
+import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
-public class CommandRemoveAdmins implements CommandExecutor
+import java.time.Instant;
+import java.util.Arrays;
+
+public class CommandKick implements CommandExecutor
 {
     private final CommandRestrictionManager commandRestrictionManager;
 
     private final CheckPermission checkPermission;
+    private final PunishmentLogManager punishmentLogManager;
 
-    public CommandRemoveAdmins(CheckPermission checkPermission, CommandRestrictionManager commandRestrictionManager)
+    public CommandKick(CheckPermission checkPermission, PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager)
     {
         this.commandRestrictionManager = commandRestrictionManager;
+        this.punishmentLogManager = punishmentLogManager;
         this.checkPermission = checkPermission;
     }
+
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
     {
@@ -35,37 +44,41 @@ public class CommandRemoveAdmins implements CommandExecutor
             return true;
         }
 
-        if (!(sender instanceof Player))
+
+
+        if(!checkPermission.checkPermission(sender,command.getName()))
         {
+            sender.sendMessage("No permission!");
             return true;
         }
-
-        Player player = (Player) sender;
-
 
         if(args.length == 0)
         {
+            sender.sendMessage("Use /kick <player> <reason>");
             return true;
         }
+
         Player target = Bukkit.getPlayer(args[0]);
 
         if(target == null)
         {
+            sender.sendMessage("Player not found.");
             return true;
         }
 
-        if(checkPermission.checkIsAdmin(sender))
+        String reason = "Kicked by admin.";
+
+        if(args.length >= 2)
         {
-            checkPermission.removeAdmin(player, target);
-            checkPermission.saveAdmin();
-            player.sendMessage("Admin removed: " + target.getName());
-            return true;
+            reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
         }
-        else
-        {
-            player.sendMessage("No permissions!");
-        }
+
+        target.kickPlayer(reason);
+
+        punishmentLogManager.saveLog(target,reason,sender, PunishmentType.KICK, Instant.now(),null);
+        sender.sendMessage("You kicked " + target.getName() + ". Reason: " + reason);
 
         return true;
     }
+
 }

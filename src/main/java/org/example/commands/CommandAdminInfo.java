@@ -6,7 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.Main;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +58,7 @@ public class CommandAdminInfo implements CommandExecutor
             return true;
         }
 
-        if (!checkPermission.checkIsAdmin(sender))
+        if(!checkPermission.checkPermission(sender,command.getName()))
         {
             player.sendMessage("No permission!");
             return true;

@@ -1,6 +1,9 @@
 package org.example.commands.guiInterface.source.guiListener;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -8,12 +11,20 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataType;
+import org.example.Main;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.commands.guiInterface.source.GuiManager;
 import org.example.commands.guiInterface.source.utils.GuiTitles;
-import org.example.commands.muteManager.CommandMute;
-import org.example.commands.punishmentManager.CommandBan;
+import org.example.commands.punishmentManager.muteManager.CommandMute;
+import org.example.commands.punishmentManager.banManager.CommandBan;
+import org.example.minePermissions.CheckPermission;
+import org.example.reports.sourse.ReportCase;
+import org.example.reports.sourse.data.ReportStatus;
+
+import java.util.UUID;
 
 public class GuiListener implements Listener
 {
@@ -21,18 +32,264 @@ public class GuiListener implements Listener
     private final CommandMute commandMute;
     private final CommandBan commandBan;
     private final CommandRestrictionManager commandRestrictionManager;
+    private final CheckPermission checkPermission;
 
-    public GuiListener(
-            GuiManager guiManager,
-            CommandMute commandMute,
-            CommandBan commandBan,
-            CommandRestrictionManager commandRestrictionManager
-    )
+    public GuiListener(GuiManager guiManager, CommandMute commandMute, CommandBan commandBan, CommandRestrictionManager commandRestrictionManager, CheckPermission checkPermission)
     {
         this.guiManager = guiManager;
         this.commandMute = commandMute;
         this.commandBan = commandBan;
         this.commandRestrictionManager = commandRestrictionManager;
+        this.checkPermission = checkPermission;
+    }
+    @EventHandler
+    public void onReportPanelClick(InventoryClickEvent event)
+    {
+        if(!(event.getWhoClicked() instanceof Player admin))
+            return;
+
+        if(!event.getView().getTitle().equals(GuiTitles.REPORT_PANEL))
+            return;
+
+        if(event.getClickedInventory() == null)
+            return;
+
+        if(event.getClickedInventory() != event.getView().getTopInventory())
+            return;
+
+        event.setCancelled(true);
+
+        ItemStack clickedItem = event.getCurrentItem();
+
+        if(clickedItem == null || clickedItem.getType() == Material.AIR)
+            return;
+
+
+        if(event.getSlot() == 45)
+        {
+            guiManager.backReportPage(admin);
+            return;
+        }
+
+        if(event.getSlot() == 48)
+        {
+            guiManager.openMenuPanel(admin);
+            return;
+        }
+
+        if(event.getSlot() == 53)
+        {
+            guiManager.nextReportPage(admin);
+            return;
+        }
+
+        if(clickedItem.getType() != Material.PLAYER_HEAD)
+            return;
+
+        ItemMeta meta = clickedItem.getItemMeta();
+
+        if(meta == null)
+            return;
+
+        NamespacedKey key = new NamespacedKey(Main.getPlugin(Main.class), "report_target_uuid");
+
+        String uuidString = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+
+        if(uuidString == null)
+            return;
+
+        UUID targetUuid = UUID.fromString(uuidString);
+
+        guiManager.selectReportCase(admin, targetUuid);
+        guiManager.openReportCasePanel(admin);
+    }
+
+    @EventHandler
+    public void onReportCaseClick(InventoryClickEvent event)
+    {
+        if(!(event.getWhoClicked() instanceof Player admin))
+            return;
+
+        if(!event.getView().getTitle().equals(GuiTitles.REPORT_CASE_PANEL))
+            return;
+
+        if(event.getClickedInventory() == null)
+            return;
+
+        if(event.getClickedInventory() != event.getView().getTopInventory())
+            return;
+
+        event.setCancelled(true);
+
+        if(event.getSlot() == 49)
+        {
+            guiManager.clearSelectedReportCase(admin);
+            guiManager.openReportMenu(admin);
+            return;
+        }
+
+        if(event.getSlot() == 48)
+        {
+            ReportCase reportCase = guiManager.getSelectedReportCase(admin);
+            if(reportCase == null)
+            {
+                return;
+            }
+
+            if(reportCase.getStatus() == ReportStatus.OPEN)
+            {
+                guiManager.openReportConfirmPanel(admin);
+                return;
+            }
+            if(reportCase.getStatus() == ReportStatus.IN_PROGRESS)
+            {
+                if(!admin.getUniqueId().equals(reportCase.getAssignedStaffUuid()))
+                {
+                    admin.sendMessage(ChatColor.RED + "This report belongs to another staff member.");
+                    return;
+                }
+                guiManager.openFinishCasePanel(admin);
+
+                return;
+            }
+        }
+
+        ItemStack clickedItem = event.getCurrentItem();
+
+        if(clickedItem == null || clickedItem.getType() != Material.WRITTEN_BOOK)
+            return;
+
+        // The report data is already stored inside the written book pages.
+        admin.openBook(clickedItem);
+    }
+
+    @EventHandler
+    public void onReportFinishClick(InventoryClickEvent event)
+    {
+        if(!(event.getWhoClicked() instanceof Player admin))
+        {
+            return;
+        }
+        if(!event.getView().getTitle().equals(GuiTitles.REPOT_FINISH_PANEL))
+        {
+            return;
+        }
+        if(event.getClickedInventory() == null || event.getClickedInventory() != event.getView().getTopInventory())
+        {
+            return;
+        }
+        event.setCancelled(true);
+
+        if(event.getSlot() == 11)
+        {
+            guiManager.openReportCasePanel(admin);
+            return;
+        }
+        if(event.getSlot() == 15)
+        {
+            ReportCase reportCase = guiManager.getSelectedReportCase(admin);
+
+            if(reportCase == null)
+            {
+                return;
+            }
+
+            if(reportCase.getStatus() != ReportStatus.IN_PROGRESS)
+            {
+                return;
+            }
+
+            if(!admin.getUniqueId().equals(reportCase.getAssignedStaffUuid()))
+            {
+                return;
+            }
+
+            guiManager.updateReport(admin, reportCase.getTargetUuid(), reportCase);
+            guiManager.openReportMenu(admin);
+            return;
+        }
+
+
+
+    }
+
+    @EventHandler
+    public void onReportConfirmClick(InventoryClickEvent event)
+    {
+        if(!(event.getWhoClicked() instanceof Player admin))
+            return;
+
+        if(!event.getView().getTitle().equals(GuiTitles.REPORT_CONFIRM_PANEL))
+            return;
+
+        if(event.getClickedInventory() == null || event.getClickedInventory() != event.getView().getTopInventory())
+            return;
+
+        event.setCancelled(true);
+
+        if(event.getSlot() == 15)
+        {
+            guiManager.openReportCasePanel(admin);
+            return;
+        }
+
+        if(event.getSlot() != 11)
+            return;
+
+        if(guiManager.takeSelectedReportCase(admin))
+        {
+            admin.sendMessage("§aReport case taken.");
+            guiManager.clearSelectedReportCase(admin);
+            guiManager.openReportMenu(admin);
+        }
+        else
+        {
+            admin.sendMessage("§cYou cannot take this report case.");
+            guiManager.openReportMenu(admin);
+        }
+    }
+
+    @EventHandler
+    public void onMenuClick(InventoryClickEvent event)
+    {
+        //who
+        if(!(event.getWhoClicked() instanceof Player admin))
+        {
+            return;
+        }
+        //is That Menu Panel?
+        if(!(event.getView().getTitle().equals(GuiTitles.MENU_PANEL)))
+        {
+            return;
+        }
+        //Menu was clicked?
+        if(event.getClickedInventory() == null)
+        {
+            return;
+        }
+        //is clicked menu not inventory
+        if(event.getClickedInventory() != event.getView().getTopInventory())
+        {
+            return;
+        }
+        //нельзя перетасквать айтемы
+        event.setCancelled(true);
+
+        switch (event.getSlot())
+        {
+            case 12:
+                guiManager.openReportMenu(admin);
+                break;
+
+            case 13:
+                guiManager.openAdminPanel(admin);
+                break;
+
+            default:
+                break;
+        }
+
+
     }
 
     @EventHandler
@@ -57,6 +314,11 @@ public class GuiListener implements Listener
         if(slot == 53)
         {
             guiManager.nextPage(admin);
+            return;
+        }
+        if(slot == 48)
+        {
+            guiManager.openMenuPanel(admin);
             return;
         }
 
@@ -123,6 +385,12 @@ public class GuiListener implements Listener
         switch(event.getSlot())
         {
             case 1:
+                if(!checkPermission.checkPermission(admin, "ban"))
+                {
+                    admin.sendMessage("§cYou don't have permission to ban players.");
+                    return;
+                }
+
                 if(isDisabled("ban", admin))
                 {
                     return;
@@ -133,6 +401,12 @@ public class GuiListener implements Listener
                 break;
 
             case 2:
+                if(!checkPermission.checkPermission(admin, "tempban"))
+                {
+                    admin.sendMessage("§cYou don't have permission to tempban players.");
+                    return;
+                }
+
                 if(isDisabled("tempban", admin))
                 {
                     return;
@@ -142,6 +416,12 @@ public class GuiListener implements Listener
                 break;
 
             case 3:
+                if(!checkPermission.checkPermission(admin, "mute"))
+                {
+                    admin.sendMessage("§cYou don't have permission to mute players.");
+                    return;
+                }
+
                 if(isDisabled("mute", admin))
                 {
                     return;
@@ -152,6 +432,12 @@ public class GuiListener implements Listener
                 break;
 
             case 4:
+                if(!checkPermission.checkPermission(admin, "tmute"))
+                {
+                    admin.sendMessage("§cYou don't have permission to temporarily mute players.");
+                    return;
+                }
+
                 if(isDisabled("tmute", admin))
                 {
                     return;
@@ -161,6 +447,12 @@ public class GuiListener implements Listener
                 break;
 
             case 5:
+                if(!checkPermission.checkPermission(admin, "kick"))
+                {
+                    admin.sendMessage("§cYou don't have permission to kick players.");
+                    return;
+                }
+
                 if(isDisabled("kick", admin))
                 {
                     return;
@@ -211,6 +503,13 @@ public class GuiListener implements Listener
         if(slot == 22)
         {
             guiManager.openPlayerPanelForAdmin(admin, target);
+            return;
+        }
+
+        ItemStack item = event.getCurrentItem();
+
+        if(item == null || item.getType().isAir())
+        {
             return;
         }
 
@@ -266,6 +565,13 @@ public class GuiListener implements Listener
         if(slot == 22)
         {
             guiManager.openPlayerPanelForAdmin(admin, target);
+            return;
+        }
+
+        ItemStack item = event.getCurrentItem();
+
+        if(item == null || item.getType().isAir())
+        {
             return;
         }
 

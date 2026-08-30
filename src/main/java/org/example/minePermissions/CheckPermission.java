@@ -1,27 +1,35 @@
-package org.example.utils;
+package org.example.minePermissions;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.Main;
+import org.example.minePermissions.roleCommandsManager.RoleCommandsManager;
+import org.example.playerProfile.PlayerProfileManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
-public class CheckPermission {
+public class CheckPermission
+{
     private final HashSet<UUID> admins = new HashSet<>();
 
     private final Main plugin;
+    private final StaffActionManager staffActionManager;
 
-    public CheckPermission(Main plugin) {
-        this.plugin = plugin;
-    }
-    public boolean checkPermission(CommandSender sender, String permission)
+    public CheckPermission(Main plugin, PlayerProfileManager playerProfileManager)
     {
-        return sender.hasPermission(permission);
+        this.plugin = plugin;
+        staffActionManager = new StaffActionManager(playerProfileManager, plugin);
+
+
+    }
+    public boolean checkPermission(CommandSender sender, String command)
+    {
+        return staffActionManager.cheakPermission(sender,command);
     }
 
     public void loadAdmins()
@@ -43,15 +51,36 @@ public class CheckPermission {
         }
     }
 
+    public boolean cheakIsOwner(CommandSender sender)
+    {
+        return staffActionManager.cheakIsOwner(sender);
+    }
+    public boolean cheakIsOwner(Player admin)
+    {
+        return staffActionManager.cheakIsOwner(admin);
+    }
+    public boolean cheakIsOwner(UUID adminUUID)
+    {
+        return staffActionManager.cheakIsOwner(adminUUID);
+    }
+
+
+    public boolean cheakIsHelper(Player player)
+    {
+        return staffActionManager.cheakIsHelper(player);
+    }
+
+
+
     public boolean checkIsAdmin(Player player)
     {
 
-        return player.hasPermission("minepaper.admin") || admins.contains(player.getUniqueId());
+        return staffActionManager.cheakModerationStatus(player);
 
     }
     public boolean checkIsAdmin(UUID uuid)
     {
-        return admins.contains(uuid);
+        return staffActionManager.cheakModerationStatus(uuid);
     }
     public boolean checkIsAdmin(CommandSender sender)
     {

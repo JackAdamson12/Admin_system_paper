@@ -1,4 +1,4 @@
-package org.example.commands.muteManager.muteData;
+package org.example.commands.punishmentManager.muteManager.muteData;
 
 import java.time.Instant;
 import java.util.UUID;

@@ -1,23 +1,30 @@
 package org.example.commands;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.luckPerms.role.listRols.StaffRole;
+import org.example.minePermissions.CheckPermission;
+import org.example.playerProfile.PlayerProfile;
+import org.example.playerProfile.PlayerProfileManager;
 
 public class CommandWho implements CommandExecutor
 {
     private final CommandRestrictionManager commandRestrictionManager;
 
     private final CheckPermission checkPermission;
+    private final PlayerProfileManager playerProfileManager;
 
-    public CommandWho(CheckPermission checkPermission, CommandRestrictionManager commandRestrictionManager)
+
+    public CommandWho(CheckPermission checkPermission, CommandRestrictionManager commandRestrictionManager, PlayerProfileManager playerProfileManager)
     {
         this.commandRestrictionManager = commandRestrictionManager;
         this.checkPermission = checkPermission;
+        this.playerProfileManager = playerProfileManager;
     }
 
     @Override
@@ -41,35 +48,56 @@ public class CommandWho implements CommandExecutor
             return true;
         }
 
+        if(args.length == 0)
+        {
+            PlayerProfile playerProfile = playerProfileManager.getProfile(sender);
 
-        Player player = (Player) sender;
-
-        if(args.length == 0) {
-            if (checkPermission.checkIsAdmin(sender)) {
-                player.sendMessage("Status: Administrator");
-                return true;
-            } else {
-                player.sendMessage("Status: Player");
+            if (playerProfile.getStaffRole() == StaffRole.PLAYER) {
+                sender.sendMessage("Status: " + ChatColor.GRAY + playerProfile.getStaffRole().toString());
                 return true;
             }
+            if (playerProfile.getStaffRole() == StaffRole.HELPER) {
+                sender.sendMessage("Status: " + ChatColor.GREEN + playerProfile.getStaffRole().toString());
+                return true;
+            }
+            if (playerProfile.getStaffRole() == StaffRole.ADMIN) {
+                sender.sendMessage("Status: " + ChatColor.AQUA + playerProfile.getStaffRole().toString());
+                return true;
+            }
+            if (playerProfile.getStaffRole() == StaffRole.HEAD_ADMIN) {
+                sender.sendMessage("Status: " + ChatColor.RED + playerProfile.getStaffRole().toString());
+                return true;
+            }
+
+            sender.sendMessage("Status: " + ChatColor.MAGIC + ChatColor.DARK_AQUA + playerProfile.getStaffRole().toString());
+
+
+            return true;
         }
 
         Player target = Bukkit.getPlayer(args[0]);
+        PlayerProfile playerProfile = playerProfileManager.getProfile(target);
 
-        if(target == null)
-        {
+        if (playerProfile.getStaffRole() == StaffRole.PLAYER) {
+            sender.sendMessage("Status: " + ChatColor.GRAY + playerProfile.getStaffRole().toString());
+            return true;
+        }
+        if (playerProfile.getStaffRole() == StaffRole.HELPER) {
+            sender.sendMessage("Status: " + ChatColor.GREEN + playerProfile.getStaffRole().toString());
+            return true;
+        }
+        if (playerProfile.getStaffRole() == StaffRole.ADMIN) {
+            sender.sendMessage("Status: " + ChatColor.AQUA + playerProfile.getStaffRole().toString());
+            return true;
+        }
+        if (playerProfile.getStaffRole() == StaffRole.HEAD_ADMIN) {
+            sender.sendMessage("Status: " + ChatColor.RED + playerProfile.getStaffRole().toString());
             return true;
         }
 
-        if (checkPermission.checkIsAdmin(sender)) {
-            player.sendMessage("Status: Administrator");
-            return true;
-        }
-
-        player.sendMessage("Status: Player");
+        sender.sendMessage("Status: " + ChatColor.MAGIC + ChatColor.DARK_AQUA + playerProfile.getStaffRole().toString());
 
         return true;
-
 
     }
 }

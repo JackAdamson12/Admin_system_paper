@@ -3,15 +3,16 @@ package org.example.commands.guiInterface.source;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.example.Main;
-import org.example.commands.guiInterface.source.panels.AdminPanel;
-import org.example.commands.guiInterface.source.panels.PlayerPanel;
-import org.example.commands.guiInterface.source.panels.PlayerPanelAdmin;
-import org.example.commands.guiInterface.source.panels.TempBanPanel;
-import org.example.commands.guiInterface.source.panels.TempMutePanel;
+import org.example.commands.guiInterface.source.panels.*;
 import org.example.commands.guiInterface.source.searchGui.SearchGui;
 import org.example.commands.guiInterface.source.utils.ButtomCreator;
 import org.example.commands.guiInterface.source.utils.GuiTitles;
-import org.example.utils.CheckPermission;
+import org.example.luckPerms.role.listRols.StaffRole;
+import org.example.minePermissions.CheckPermission;
+import org.example.playerProfile.PlayerProfile;
+import org.example.playerProfile.PlayerProfileManager;
+import org.example.reports.sourse.ReportCase;
+import org.example.reports.sourse.ReportManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ public class GuiManager
 {
     private final CheckPermission checkPermission;
     private final Main plugin;
+    private final ReportManager reportManager;
 
     private final Map<UUID, Integer> pages = new HashMap<>();
     private final Map<UUID, UUID> selectedPlayers = new HashMap<>();
@@ -32,37 +34,96 @@ public class GuiManager
     private final int pageSize = panelSize - 9;
 
     private final AdminPanel adminPanel;
-    private final PlayerPanel playerPanel;
     private final PlayerPanelAdmin playerPanelAdmin;
     private final SearchGui searchGui;
     private final TempMutePanel tempMutePanel;
     private final TempBanPanel tempBanPanel;
+    private final MenuPanel menuPanel;
+    private final ReportPanel reportPanel;
+    private final ReportCasePanel reportCasePanel;
+    private final ReportConfirmPanel reportConfirmPanel;
+    private final ReportFinishPanel reportFinishPanel;
 
-    public GuiManager(CheckPermission checkPermission, Main plugin)
+    private final PlayerProfileManager playerProfileManager;
+
+    public GuiManager(CheckPermission checkPermission, PlayerProfileManager playerProfileManager, Main plugin,ReportManager reportManager)
     {
         this.checkPermission = checkPermission;
         this.plugin = plugin;
+        this.playerProfileManager = playerProfileManager;
+        this.reportManager = reportManager;
 
         ButtomCreator buttonCreator = new ButtomCreator();
 
         this.adminPanel = new AdminPanel(buttonCreator, this, pages);
-        this.playerPanel = new PlayerPanel();
+
         this.playerPanelAdmin = new PlayerPanelAdmin(buttonCreator, this);
         this.searchGui = new SearchGui(this);
         this.tempMutePanel = new TempMutePanel(buttonCreator, this);
         this.tempBanPanel = new TempBanPanel(buttonCreator, this);
+        this.menuPanel = new MenuPanel(buttonCreator,this);
+        this.reportPanel = new ReportPanel(buttonCreator,reportManager,playerProfileManager);
+        this.reportCasePanel = new ReportCasePanel(buttonCreator, this);
+        this.reportConfirmPanel = new ReportConfirmPanel(buttonCreator);
+        this.reportFinishPanel = new ReportFinishPanel(buttonCreator);
     }
 
     public void openPanel(Player player)
     {
-        if(checkPermission.checkIsAdmin(player))
+        PlayerProfile playerProfile;
+        playerProfile = playerProfileManager.getProfile(player);
+
+        if(playerProfile.getStaffRole() == StaffRole.PLAYER)
         {
-            adminPanel.openAdminPanel(player);
+            player.sendMessage("No permissions!");
+            return;
         }
-        else
-        {
-            playerPanel.openPlayerPanel(player);
-        }
+        openMenuPanel(player);
+
+
+    }
+    public void openReportCasePanel(Player player)
+    {
+        reportCasePanel.open(player);
+    }
+
+    public void openReportConfirmPanel(Player player)
+    {
+        reportConfirmPanel.open(player);
+    }
+
+    public void openFinishCasePanel(Player player)
+    {
+        reportFinishPanel.open(player);
+    }
+
+    public boolean takeSelectedReportCase(Player player)
+    {
+        ReportCase reportCase = getSelectedReportCase(player);
+        if(reportCase == null)
+            return false;
+
+        return reportManager.takeReport(player, reportCase.getTargetUuid());
+    }
+
+    public void openReportMenu(Player player)
+    {
+        reportPanel.openReportPanel(player);
+    }
+
+    public void nextReportPage(Player player)
+    {
+        reportPanel.nextPage(player);
+    }
+
+    public void backReportPage(Player player)
+    {
+        reportPanel.backPage(player);
+    }
+
+    public void openMenuPanel(Player player)
+    {
+        menuPanel.openMenuPanel(player);
     }
 
     public void openAdminPanel(Player player)
@@ -82,11 +143,28 @@ public class GuiManager
 
     public void openTempMutePanel(Player admin)
     {
+        if(checkPermission.cheakIsHelper(admin))
+        {
+            tempMutePanel.openForHelper(admin);
+            return;
+        }
+
         tempMutePanel.open(admin);
+    }
+
+    public void updateReport(Player admin, UUID target, ReportCase reportCase)
+    {
+        reportManager.updateReport(admin,target,reportCase);
     }
 
     public void openTempBanPanel(Player admin)
     {
+        if(checkPermission.cheakIsHelper(admin))
+        {
+            tempBanPanel.openForHelper(admin);
+            return;
+        }
+
         tempBanPanel.open(admin);
     }
 
@@ -124,10 +202,7 @@ public class GuiManager
 
     public void setPage(Player player, int page)
     {
-        pages.put(
-                player.getUniqueId(),
-                Math.max(1, page)
-        );
+        pages.put(player.getUniqueId(), Math.max(1, page));
     }
 
     public void resetPage(Player player)
@@ -246,7 +321,15 @@ public class GuiManager
         if(title == null)
             return false;
 
-        return title.equals(GuiTitles.ADMIN_PANEL) || title.equals(GuiTitles.FUNCTIONS) || title.equals(GuiTitles.TEMP_BAN) || title.equals(GuiTitles.TEMP_MUTE);
+        return title.equals(GuiTitles.ADMIN_PANEL)
+                || title.equals(GuiTitles.FUNCTIONS)
+                || title.equals(GuiTitles.TEMP_BAN)
+                || title.equals(GuiTitles.TEMP_MUTE)
+                || title.equals(GuiTitles.MENU_PANEL)
+                || title.equals(GuiTitles.REPORT_PANEL)
+                || title.equals(GuiTitles.REPORT_CASE_PANEL)
+                || title.equals(GuiTitles.REPORT_CONFIRM_PANEL)
+                || title.equals(GuiTitles.REPOT_FINISH_PANEL);
     }
 
     public void handleGuiClose(Player player)
@@ -269,6 +352,27 @@ public class GuiManager
             stopSearch(player);
         });
     }
+    private final Map<UUID, UUID> selectedReportCases = new HashMap<>();
+
+    public void selectReportCase(Player admin, UUID targetUuid)
+    {
+        selectedReportCases.put(admin.getUniqueId(), targetUuid);
+    }
+
+    public ReportCase getSelectedReportCase(Player admin)
+    {
+        UUID targetUuid = selectedReportCases.get(admin.getUniqueId());
+
+        if(targetUuid == null)
+            return null;
+
+        return reportManager.getReportCase(targetUuid);
+    }
+
+    public void clearSelectedReportCase(Player admin)
+    {
+        selectedReportCases.remove(admin.getUniqueId());
+    }
 
     public void cleanup(Player player)
     {
@@ -276,6 +380,8 @@ public class GuiManager
 
         pages.remove(playerUuid);
         selectedPlayers.remove(playerUuid);
+        selectedReportCases.remove(playerUuid);
+        reportPanel.resetPage(player);
         searchingPlayers.remove(playerUuid);
         searchQueries.remove(playerUuid);
     }

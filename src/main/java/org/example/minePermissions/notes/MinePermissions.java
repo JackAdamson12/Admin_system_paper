@@ -1,8 +1,12 @@
 package org.example.minePermissions.notes;
 
-public final class MinePermissions
+
+import org.example.playerProfile.PlayerProfile;
+
+public class MinePermissions
 {
-    private MinePermissions() {}
+
+    private MinePermissions( ){}
 
     // Player
     public static final String REPORT_CREATE = "minepaper.report.create";

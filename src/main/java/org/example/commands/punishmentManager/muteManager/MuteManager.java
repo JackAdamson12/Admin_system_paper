@@ -1,4 +1,4 @@
-package org.example.commands.muteManager;
+package org.example.commands.punishmentManager.muteManager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -6,7 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.example.Main;
-import org.example.commands.muteManager.muteData.MuteData;
+import org.example.commands.punishmentManager.muteManager.muteData.MuteData;
 
 import java.io.File;
 import java.io.IOException;

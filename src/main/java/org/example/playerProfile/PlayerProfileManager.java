@@ -6,6 +6,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.example.Main;
+import org.example.commands.punishmentManager.PunishmentManager;
 import org.example.luckPerms.role.RoleManager;
 import org.example.luckPerms.role.listRols.StaffRole;
 
@@ -22,12 +23,15 @@ public class PlayerProfileManager
     private final File file;
     private FileConfiguration config;
     private final Map<UUID,PlayerProfile> playersProfile;
+
+
  //   private final RoleManager roleManager;
 
 
     public PlayerProfileManager(Main plugin)
     {
-       // this.roleManager = new RoleManager(this);
+
+
         playersProfile = new HashMap<>();
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(),"players.yml");
@@ -134,9 +138,16 @@ public class PlayerProfileManager
                 plugin.getLogger().warning("Invalid role for player " + playerUUID);
                 continue;
             }
+            PlayerProfile playerProfile;
 
-            PlayerProfile playerProfile = new PlayerProfile(uuid, nickName, staffRole);
-
+            if(staffRole == StaffRole.PLAYER)
+            {
+                playerProfile = new PlayerProfile(uuid, nickName, staffRole);
+            }
+            else
+            {
+                 playerProfile = new PlayerProfile(uuid, nickName, staffRole, PlayerStaffStatus.OPEN);
+            }
             playersProfile.put(uuid, playerProfile);
         }
     }

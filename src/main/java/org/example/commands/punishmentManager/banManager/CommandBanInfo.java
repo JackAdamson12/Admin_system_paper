@@ -1,4 +1,4 @@
-package org.example.commands.punishmentManager;
+package org.example.commands.punishmentManager.banManager;
 
 import io.papermc.paper.ban.BanListType;
 import org.bukkit.BanEntry;
@@ -10,7 +10,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -50,7 +50,7 @@ public class CommandBanInfo implements CommandExecutor
 
 
 
-        if(!checkPermission.checkIsAdmin(sender))
+        if(!checkPermission.checkPermission(sender,command.getName()))
         {
             sender.sendMessage("No permission!");
             return true;

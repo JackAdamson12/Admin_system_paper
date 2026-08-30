@@ -6,6 +6,7 @@ import org.bukkit.inventory.Inventory;
 import org.example.commands.guiInterface.source.GuiManager;
 import org.example.commands.guiInterface.source.utils.ButtomCreator;
 import org.example.commands.guiInterface.source.utils.GuiTitles;
+import org.example.playerProfile.PlayerProfile;
 
 public class PlayerPanelAdmin
 {
@@ -23,6 +24,7 @@ public class PlayerPanelAdmin
         guiManager.selectPlayer(admin, target);
 
         Inventory inventory = Bukkit.createInventory(null, 9, GuiTitles.FUNCTIONS);
+
 
         bc.createFunctionsBottom(inventory);
 

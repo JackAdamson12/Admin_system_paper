@@ -10,7 +10,7 @@ import org.example.luckPerms.role.RoleManager;
 import org.example.luckPerms.role.listRols.StaffRole;
 import org.example.playerProfile.PlayerProfile;
 import org.example.playerProfile.PlayerProfileManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 public class CommandDemoteRole implements CommandExecutor
 {
@@ -33,6 +33,12 @@ public class CommandDemoteRole implements CommandExecutor
             return true;
         }
 
+        if(!checkPermission.checkPermission(sender,command.getName()))
+        {
+            sender.sendMessage("No permission!");
+            return true;
+        }
+
         if (args.length == 0) {
             sender.sendMessage("Use /demote + <player>");
             return true;
@@ -47,6 +53,12 @@ public class CommandDemoteRole implements CommandExecutor
 
         PlayerProfile actor = playerProfileManager.getProfile(sender);
         PlayerProfile target = playerProfileManager.getProfile(target_player);
+
+        if(target.getStaffRole() == StaffRole.OWNER)
+        {
+            sender.sendMessage("You cannot do that");
+            return true;
+        }
 
         boolean demoted = roleManager.demote(actor, target);
 

@@ -1,4 +1,4 @@
-package org.example.commands.muteManager;
+package org.example.commands.punishmentManager.muteManager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 import java.time.Instant;
 
@@ -45,9 +45,9 @@ public class CommandUnmute implements CommandExecutor
             return true;
         }
 
-        if(!checkPermission.checkIsAdmin(sender))
+        if(!checkPermission.checkPermission(sender,command.getName()))
         {
-            sender.sendMessage("No permissions!");
+            sender.sendMessage("No permission!");
             return true;
         }
 

@@ -9,7 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.Main;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 public class CommandUnspectate implements CommandExecutor
 {
@@ -59,7 +59,8 @@ public class CommandUnspectate implements CommandExecutor
 
         Player player = (Player) sender;
 
-        if (!checkPermission.checkIsAdmin(sender)) {
+        if(!checkPermission.checkPermission(sender,command.getName()))
+        {
             player.sendMessage("No permission!");
             return true;
         }

@@ -174,9 +174,21 @@ commands:
     description: Demote role
     usage: /demote <player>
 
+  setowner:
+    description: set second owner server
+    usage: /setowner <player>
+
   reload:
     description: Reload MinePaper data
     usage: /reload -p
+
+  report:
+    description: Report player
+    usage: /report <player> + <reason>
+
+  info:
+    description: info about player
+    usage: /info <player>
 
 
 

@@ -8,7 +8,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.example.commands.guiInterface.source.GuiManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 public class ModerationBookListener implements Listener {
 

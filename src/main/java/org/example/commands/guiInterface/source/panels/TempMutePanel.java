@@ -36,4 +36,22 @@ public class TempMutePanel
 
         admin.openInventory(inventory);
     }
+
+    public void openForHelper(Player admin)
+    {
+        Player target = guiManager.getSelectedPlayer(admin);
+
+        if(target == null)
+        {
+            admin.sendMessage("§cPlayer left the server.");
+            admin.closeInventory();
+            return;
+        }
+
+        Inventory inventory = Bukkit.createInventory(null, 27, GuiTitles.TEMP_MUTE);
+
+        buttonCreator.createTempMuteBottomForHelper(inventory);
+
+        admin.openInventory(inventory);
+    }
 }

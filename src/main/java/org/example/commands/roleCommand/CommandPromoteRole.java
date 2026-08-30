@@ -2,7 +2,6 @@ package org.example.commands.roleCommand;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -11,7 +10,7 @@ import org.example.luckPerms.role.RoleManager;
 import org.example.luckPerms.role.listRols.StaffRole;
 import org.example.playerProfile.PlayerProfile;
 import org.example.playerProfile.PlayerProfileManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 public class CommandPromoteRole implements CommandExecutor
 {
@@ -31,6 +30,12 @@ public class CommandPromoteRole implements CommandExecutor
         if(!(sender instanceof Player))
         {
             sender.sendMessage("This command is not for console");
+            return true;
+        }
+
+        if(!checkPermission.checkPermission(sender,command.getName()))
+        {
+            sender.sendMessage("No permission!");
             return true;
         }
 

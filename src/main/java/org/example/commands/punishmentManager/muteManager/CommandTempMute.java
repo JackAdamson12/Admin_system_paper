@@ -1,4 +1,4 @@
-package org.example.commands.muteManager;
+package org.example.commands.punishmentManager.muteManager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
-import org.example.utils.CheckPermission;
+import org.example.minePermissions.CheckPermission;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -46,9 +46,9 @@ public class CommandTempMute implements CommandExecutor
             return true;
         }
 
-        if(!checkPermission.checkIsAdmin(sender))
+        if(!checkPermission.checkPermission(sender,command.getName()))
         {
-            sender.sendMessage("No permissions!");
+            sender.sendMessage("No permission!");
             return true;
         }
 
@@ -82,6 +82,20 @@ public class CommandTempMute implements CommandExecutor
             return true;
         }
 
+        String punishmentTime = args[1];
+
+        if(checkPermission.cheakIsHelper(restrictionPlayer))
+        {
+            Duration maxDuration = Duration.ofHours(24);
+
+            if(parseTime.compareTo(maxDuration) > 0)
+            {
+                parseTime = maxDuration;
+                punishmentTime = "24h";
+                sender.sendMessage("Helper can punish maximum for 24 hours. Time changed to 24h.");
+            }
+        }
+
         String reason = String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length));
 
         if(muteManager.isMuted(target.getUniqueId()))
@@ -91,13 +105,13 @@ public class CommandTempMute implements CommandExecutor
         }
 
         muteManager.tempMute(target.getUniqueId(), reason, sender.getName(), parseTime);
-        sender.sendMessage("Player " + targetName + " has been muted to " + args[1] + ". Reason: " + reason);
+        sender.sendMessage("Player " + targetName + " has been muted to " + punishmentTime + ". Reason: " + reason);
 
         Player onlineTarget = target.getPlayer();
 
         if(onlineTarget != null)
         {
-            onlineTarget.sendMessage("You have been muted to " + args[1] + ". Reason: " + reason);
+            onlineTarget.sendMessage("You have been muted to " + punishmentTime + ". Reason: " + reason);
         }
 
         Instant createdAt = Instant.now();
