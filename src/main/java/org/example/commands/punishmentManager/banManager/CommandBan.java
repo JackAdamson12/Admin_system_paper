@@ -13,6 +13,7 @@ import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.minePermissions.CheckPermission;
+import org.example.playerProfile.playerReputationManager.PlayerReputationManager;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -26,15 +27,17 @@ public class CommandBan implements CommandExecutor
     private final PunishmentLogManager punishmentLogManager;
     private final CheckPermission checkPermission;
     private final ProfileBanList banList;
+    private final PlayerReputationManager reputationManager;
 
     private String targetName;
 
-    public CommandBan(CheckPermission checkPermission,PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager)
+    public CommandBan(CheckPermission checkPermission,PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager, PlayerReputationManager playerReputationManager)
     {
         this.commandRestrictionManager = commandRestrictionManager;
         this.punishmentLogManager = punishmentLogManager;
         this.banList = Bukkit.getBanList(BanListType.PROFILE);
         this.checkPermission = checkPermission;
+        this.reputationManager = playerReputationManager;
     }
 
     @Override
@@ -129,6 +132,7 @@ public class CommandBan implements CommandExecutor
         }
 
         punishmentLogManager.saveLog(target,reason,sender, PunishmentType.BAN,Instant.now(),null);
+        reputationManager.setTrustLevelFromCommands(target,-5);
 
         sender.sendMessage("Player " + targetName + " has been banned.\n" + "UUID: " + target.getUniqueId() + "\n" + "Reason: " + reason);
 

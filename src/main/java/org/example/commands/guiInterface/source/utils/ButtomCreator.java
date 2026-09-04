@@ -175,4 +175,11 @@ public class ButtomCreator
         return book;
     }
 
+    public void ReportConfirmationBottom(Inventory inventory)
+    {
+        inventory.setItem(11, createButton(Material.GREEN_BANNER, ChatColor.GREEN + "CONFIRMED"));
+        inventory.setItem(15, createButton(Material.RED_BANNER, ChatColor.RED + "REJECTED"));
+
+    }
+
 }

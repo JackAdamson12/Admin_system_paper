@@ -1,6 +1,7 @@
 package org.example.reports.sourse;
 
 import org.example.reports.sourse.data.LoadedReport;
+import org.example.reports.sourse.data.ReportResult;
 import org.example.reports.sourse.data.ReportStatus;
 
 import java.util.ArrayList;
@@ -15,13 +16,14 @@ public class ReportCase
     private final List<LoadedReport> reports;
     private ReportStatus status;
     private UUID assignedStaffUuid;
+    private ReportResult reportResult;
 
     public ReportCase(UUID targetUuid, String targetName, int priority, List<LoadedReport> reports)
     {
-        this(targetUuid, targetName, priority, reports, ReportStatus.OPEN, null);
+        this(targetUuid, targetName, priority, reports, ReportStatus.OPEN,ReportResult.UNKNOW, null);
     }
 
-    public ReportCase(UUID targetUuid, String targetName, int priority, List<LoadedReport> reports, ReportStatus status, UUID assignedStaffUuid)
+    public ReportCase(UUID targetUuid, String targetName, int priority, List<LoadedReport> reports, ReportStatus status,ReportResult reportResult ,UUID assignedStaffUuid)
     {
         this.targetUuid = targetUuid;
         this.targetName = targetName;
@@ -43,10 +45,29 @@ public class ReportCase
         {
             this.status = status;
         }
+
+        if(reportResult == null)
+        {
+            this.reportResult = ReportResult.UNKNOW;
+        }
+        else
+        {
+            this.reportResult = reportResult;
+        }
         this.assignedStaffUuid = assignedStaffUuid;
     }
 
     public void setStatus(ReportStatus status) { this.status = status; }
+
+    public void setReportResult(ReportResult reportResult)
+    {
+        this.reportResult = reportResult;
+    }
+
+    public ReportResult getReportResult()
+    {
+        return reportResult;
+    }
 
     public ReportStatus getStatus() { return status; }
 

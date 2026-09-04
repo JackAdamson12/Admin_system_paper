@@ -9,6 +9,7 @@ import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.minePermissions.CheckPermission;
+import org.example.playerProfile.playerReputationManager.PlayerReputationManager;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -19,12 +20,14 @@ public class CommandKick implements CommandExecutor
 
     private final CheckPermission checkPermission;
     private final PunishmentLogManager punishmentLogManager;
+    private final PlayerReputationManager reputationManager;
 
-    public CommandKick(CheckPermission checkPermission, PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager)
+    public CommandKick(CheckPermission checkPermission, PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager,PlayerReputationManager playerReputationManager)
     {
         this.commandRestrictionManager = commandRestrictionManager;
         this.punishmentLogManager = punishmentLogManager;
         this.checkPermission = checkPermission;
+        this.reputationManager = playerReputationManager;
     }
 
 
@@ -77,6 +80,8 @@ public class CommandKick implements CommandExecutor
 
         punishmentLogManager.saveLog(target,reason,sender, PunishmentType.KICK, Instant.now(),null);
         sender.sendMessage("You kicked " + target.getName() + ". Reason: " + reason);
+
+        reputationManager.setTrustLevelFromCommands(target,-2);
 
         return true;
     }

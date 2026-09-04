@@ -22,7 +22,11 @@ import org.example.commands.punishmentManager.muteManager.CommandMute;
 import org.example.commands.punishmentManager.banManager.CommandBan;
 import org.example.minePermissions.CheckPermission;
 import org.example.reports.sourse.ReportCase;
+import org.example.reports.sourse.data.ReportResult;
 import org.example.reports.sourse.data.ReportStatus;
+import org.example.playerProfile.PlayerProfile;
+import org.example.playerProfile.PlayerProfileManager;
+import org.example.playerProfile.playerReputationManager.PlayerReputationManager;
 
 import java.util.UUID;
 
@@ -33,14 +37,18 @@ public class GuiListener implements Listener
     private final CommandBan commandBan;
     private final CommandRestrictionManager commandRestrictionManager;
     private final CheckPermission checkPermission;
+    private final PlayerProfileManager playerProfileManager;
+    private final PlayerReputationManager playerReputationManager;
 
-    public GuiListener(GuiManager guiManager, CommandMute commandMute, CommandBan commandBan, CommandRestrictionManager commandRestrictionManager, CheckPermission checkPermission)
+    public GuiListener(GuiManager guiManager, CommandMute commandMute, CommandBan commandBan, CommandRestrictionManager commandRestrictionManager, CheckPermission checkPermission, PlayerProfileManager playerProfileManager, PlayerReputationManager playerReputationManager)
     {
         this.guiManager = guiManager;
         this.commandMute = commandMute;
         this.commandBan = commandBan;
         this.commandRestrictionManager = commandRestrictionManager;
         this.checkPermission = checkPermission;
+        this.playerProfileManager = playerProfileManager;
+        this.playerReputationManager = playerReputationManager;
     }
     @EventHandler
     public void onReportPanelClick(InventoryClickEvent event)
@@ -204,13 +212,62 @@ public class GuiListener implements Listener
                 return;
             }
 
-            guiManager.updateReport(admin, reportCase.getTargetUuid(), reportCase);
-            guiManager.openReportMenu(admin);
+            guiManager.openReportConfirmStatusPanel(admin);
             return;
         }
 
 
 
+    }
+    @EventHandler
+    public void onReportConfirmStatusClick(InventoryClickEvent event)
+    {
+        if(!(event.getWhoClicked() instanceof Player admin))
+            return;
+
+        if(!event.getView().getTitle().equals(GuiTitles.IS_REPORT_JUSTIFIED))
+            return;
+
+        if(event.getClickedInventory() == null || event.getClickedInventory() != event.getView().getTopInventory())
+            return;
+
+        event.setCancelled(true);
+
+        ReportCase reportCase = guiManager.getSelectedReportCase(admin);
+
+        if(reportCase == null)
+            return;
+
+        if(reportCase.getStatus() != ReportStatus.IN_PROGRESS)
+            return;
+
+        if(!admin.getUniqueId().equals(reportCase.getAssignedStaffUuid()))
+            return;
+
+        if(event.getSlot() == 11)
+        {
+            reportCase.setReportResult(ReportResult.CONFIRMED);
+
+            PlayerProfile target = playerProfileManager.getProfile(reportCase.getTargetUuid());
+
+            if(target != null)
+            {
+                playerReputationManager.scoreReputation(target);
+            }
+
+            guiManager.updateReport(admin, reportCase.getTargetUuid(), reportCase);
+            guiManager.openReportMenu(admin);
+            return;
+        }
+
+        if(event.getSlot() == 15)
+        {
+            reportCase.setReportResult(ReportResult.REJECTED);
+
+            guiManager.updateReport(admin, reportCase.getTargetUuid(), reportCase);
+            guiManager.openReportMenu(admin);
+            return;
+        }
     }
 
     @EventHandler
@@ -397,6 +454,7 @@ public class GuiListener implements Listener
                 }
 
                 commandBan.getBan(admin, target);
+                playerReputationManager.setTrustLevelFromCommands(target,-5);
                 closeAndClear(admin);
                 break;
 
@@ -428,6 +486,7 @@ public class GuiListener implements Listener
                 }
 
                 commandMute.getMute(admin, target);
+                playerReputationManager.setTrustLevelFromCommands(target,-5);
                 closeAndClear(admin);
                 break;
 
@@ -459,6 +518,7 @@ public class GuiListener implements Listener
                 }
 
                 target.kickPlayer("Kicked by admin");
+                playerReputationManager.setTrustLevelFromCommands(target,-2);
                 closeAndClear(admin);
                 break;
 
@@ -530,6 +590,7 @@ public class GuiListener implements Listener
             admin.sendMessage("§cTempBan command could not be executed.");
             return;
         }
+        playerReputationManager.setTrustLevelFromCommands(target,-5);
 
         closeAndClear(admin);
     }
@@ -592,6 +653,7 @@ public class GuiListener implements Listener
             admin.sendMessage("§cTempMute command could not be executed.");
             return;
         }
+        playerReputationManager.setTrustLevelFromCommands(target,-5);
 
         closeAndClear(admin);
     }

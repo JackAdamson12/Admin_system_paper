@@ -26,11 +26,15 @@ import org.example.events.FreezeEvent;
 import org.example.events.GodModeEvent;
 import org.example.events.VanishEvent;
 import org.example.luckPerms.role.RoleManager;
+import org.example.playTimeManager.PlayTimeManager;
+import org.example.playTimeManager.sourse.JoinEventListener;
+import org.example.playTimeManager.sourse.QuitEventListener;
 import org.example.playerInfoCommand.CommandPlayerInfo;
 import org.example.playerInfoCommand.sourse.PlayerInfoManager;
 import org.example.playerProfile.PlayerProfileManager;
 import org.example.playerProfile.listener.PlayerProfileListener;
 import org.example.minePermissions.CheckPermission;
+import org.example.playerProfile.playerReputationManager.PlayerReputationManager;
 import org.example.reports.CommandReport;
 import org.example.reports.sourse.ReportManager;
 import org.example.utils.TeleportUtils;
@@ -48,6 +52,9 @@ public final class Main extends JavaPlugin
     private MuteManager muteManager;
     private PunishmentManager punishmentManager;
     private PlayerInfoManager playerInfoManager;
+    private PlayTimeManager playTimeManager;
+    private PlayerReputationManager playerReputationManager;
+    private ReportManager reportManager;
 
     @Override
     public void onEnable()
@@ -57,14 +64,19 @@ public final class Main extends JavaPlugin
         muteManager = new MuteManager(this);
         punishmentManager = new PunishmentManager(muteManager);
         playerProfileManager = new PlayerProfileManager(this);
-        roleManager = new RoleManager(playerProfileManager);
+        playTimeManager = new PlayTimeManager(this,playerProfileManager);
         checkPermission = new CheckPermission(this,playerProfileManager);
-        ReportManager reportManager = new ReportManager(checkPermission,playerProfileManager,punishmentManager,this);
+        reportManager = new ReportManager(checkPermission,playerProfileManager,punishmentManager,this);
+        playerReputationManager = new PlayerReputationManager(playerProfileManager,reportManager,playTimeManager,muteManager,this);
+        roleManager = new RoleManager(playerProfileManager);
         punishmentLogManager = new PunishmentLogManager(this);
         guiManager = new GuiManager(checkPermission,playerProfileManager,this,reportManager);
         CommandRestrictionManager commandRestrictionManager = new CommandRestrictionManager(this);
         playerInfoManager = new PlayerInfoManager(this);
         checkPermission.loadAdmins();
+
+
+        playerReputationManager.startReputationTimer();
 
 
 
@@ -95,7 +107,7 @@ public final class Main extends JavaPlugin
         CommandVanish commandVanish = new CommandVanish(this,checkPermission,commandRestrictionManager);
         getCommand("vanish").setExecutor(commandVanish);
         getServer().getPluginManager().registerEvents(new VanishEvent(commandVanish), this);
-        getCommand("kick").setExecutor(new CommandKick(checkPermission,punishmentLogManager,commandRestrictionManager));
+        getCommand("kick").setExecutor(new CommandKick(checkPermission,punishmentLogManager,commandRestrictionManager,playerReputationManager));
         //Spectate
         CommandSpectate commandSpectate = new CommandSpectate(checkPermission,this,commandRestrictionManager);
         getCommand("spectate").setExecutor(commandSpectate);
@@ -120,19 +132,19 @@ public final class Main extends JavaPlugin
 
         //Info
         getCommand("adminfo").setExecutor(new CommandAdminInfo(checkPermission, this,commandRestrictionManager));
-        getCommand("info").setExecutor(new CommandPlayerInfo(checkPermission,playerInfoManager,playerProfileManager));
+        getCommand("info").setExecutor(new CommandPlayerInfo(checkPermission,playerInfoManager,playerProfileManager,playTimeManager,playerReputationManager));
 
         //Ban
-        CommandBan commandBan = new CommandBan(checkPermission,punishmentLogManager,commandRestrictionManager);
+        CommandBan commandBan = new CommandBan(checkPermission,punishmentLogManager,commandRestrictionManager,playerReputationManager);
         getCommand("ban").setExecutor(commandBan);
         getCommand("pardon").setExecutor(new CommandUnban(checkPermission,punishmentLogManager,commandRestrictionManager));
         getCommand("baninfo").setExecutor(new CommandBanInfo(checkPermission,commandRestrictionManager));
-        getCommand("tempban").setExecutor(new CommandTempBan(checkPermission,punishmentLogManager,commandRestrictionManager));
+        getCommand("tempban").setExecutor(new CommandTempBan(checkPermission,punishmentLogManager,commandRestrictionManager,playerReputationManager));
 
         //Mute
-        CommandMute commandMute = new CommandMute(checkPermission,muteManager,punishmentLogManager,guiManager,commandRestrictionManager);
+        CommandMute commandMute = new CommandMute(checkPermission,muteManager,punishmentLogManager,guiManager,commandRestrictionManager,playerReputationManager);
         getCommand("mute").setExecutor(commandMute);
-        getCommand("tmute").setExecutor(new CommandTempMute(checkPermission,muteManager,punishmentLogManager,commandRestrictionManager));
+        getCommand("tmute").setExecutor(new CommandTempMute(checkPermission,muteManager,punishmentLogManager,commandRestrictionManager,playerReputationManager));
         getCommand("unmute").setExecutor(new CommandUnmute(checkPermission,muteManager,punishmentLogManager,commandRestrictionManager));
         getCommand("muteinfo").setExecutor(new CommandMuteInfo(checkPermission, muteManager,commandRestrictionManager));
         getCommand("mutelog").setExecutor(new CommandMuteLog(checkPermission, punishmentLogManager,commandRestrictionManager));
@@ -143,7 +155,7 @@ public final class Main extends JavaPlugin
 
 
         // GUI
-        getServer().getPluginManager().registerEvents(new GuiListener(guiManager,commandMute,commandBan,commandRestrictionManager,checkPermission), this);
+        getServer().getPluginManager().registerEvents(new GuiListener(guiManager,commandMute,commandBan,commandRestrictionManager,checkPermission,playerProfileManager,playerReputationManager), this);
         getServer().getPluginManager().registerEvents(new SearchChatListener(guiManager), this);
         getCommand("panel").setExecutor(new CommandGuiAdmin(checkPermission, guiManager,commandRestrictionManager));
 
@@ -159,6 +171,8 @@ public final class Main extends JavaPlugin
 
         //Role
         getServer().getPluginManager().registerEvents(new PlayerProfileListener(playerProfileManager),this);
+        getServer().getPluginManager().registerEvents(new JoinEventListener(playTimeManager),this);
+        getServer().getPluginManager().registerEvents(new QuitEventListener(playTimeManager),this);
         getCommand("promote").setExecutor(new CommandPromoteRole(checkPermission,playerProfileManager,roleManager));
         getCommand("demote").setExecutor(new CommandDemoteRole(checkPermission,playerProfileManager,roleManager));
         getCommand("setowner").setExecutor(new CommandSetOwner(playerProfileManager));
@@ -182,7 +196,10 @@ public final class Main extends JavaPlugin
     @Override
     public void onDisable()
     {
-
+        if(playTimeManager != null)
+        {
+            playTimeManager.stopAllTimeCounters();
+        }
     }
 
 }

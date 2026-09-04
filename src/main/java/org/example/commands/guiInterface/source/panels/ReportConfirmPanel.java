@@ -17,6 +17,7 @@ public class ReportConfirmPanel
         this.buttonCreator = buttonCreator;
     }
 
+    //Panel for confirmation if you take report
     public void open(Player player)
     {
         Inventory inventory = Bukkit.createInventory(null, 27, GuiTitles.REPORT_CONFIRM_PANEL);

@@ -10,6 +10,7 @@ import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.minePermissions.CheckPermission;
+import org.example.playerProfile.playerReputationManager.PlayerReputationManager;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -21,13 +22,15 @@ public class CommandTempMute implements CommandExecutor
     private final CheckPermission checkPermission;
     private final MuteManager muteManager;
     private final PunishmentLogManager punishmentLogManager;
+    private final PlayerReputationManager reputationManager;
 
-    public CommandTempMute(CheckPermission checkPermission, MuteManager muteManager, PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager)
+    public CommandTempMute(CheckPermission checkPermission, MuteManager muteManager, PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager,PlayerReputationManager reputationManager)
     {
         this.commandRestrictionManager = commandRestrictionManager;
         this.punishmentLogManager = punishmentLogManager;
         this.checkPermission = checkPermission;
         this.muteManager = muteManager;
+        this.reputationManager = reputationManager;
     }
 
     @Override
@@ -117,6 +120,8 @@ public class CommandTempMute implements CommandExecutor
         Instant createdAt = Instant.now();
         Instant expiresAt = createdAt.plus(parseTime);
         punishmentLogManager.saveLog(target, reason, sender, PunishmentType.TEMP_MUTE, createdAt, expiresAt);
+
+        reputationManager.setTrustLevelFromCommands(target, -5);
 
         return true;
     }

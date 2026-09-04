@@ -43,6 +43,7 @@ public class GuiManager
     private final ReportCasePanel reportCasePanel;
     private final ReportConfirmPanel reportConfirmPanel;
     private final ReportFinishPanel reportFinishPanel;
+    private final ReportConfirmationPanel reportConfirmationPanel;
 
     private final PlayerProfileManager playerProfileManager;
 
@@ -66,6 +67,7 @@ public class GuiManager
         this.reportCasePanel = new ReportCasePanel(buttonCreator, this);
         this.reportConfirmPanel = new ReportConfirmPanel(buttonCreator);
         this.reportFinishPanel = new ReportFinishPanel(buttonCreator);
+        this.reportConfirmationPanel = new ReportConfirmationPanel(buttonCreator);
     }
 
     public void openPanel(Player player)
@@ -96,6 +98,10 @@ public class GuiManager
     {
         reportFinishPanel.open(player);
     }
+    public void closeFinishCasePanel()
+    {
+        reportFinishPanel.close();
+    }
 
     public boolean takeSelectedReportCase(Player player)
     {
@@ -104,6 +110,11 @@ public class GuiManager
             return false;
 
         return reportManager.takeReport(player, reportCase.getTargetUuid());
+    }
+
+    public void openReportConfirmStatusPanel(Player player)
+    {
+        reportConfirmationPanel.open(player);
     }
 
     public void openReportMenu(Player player)
@@ -329,7 +340,8 @@ public class GuiManager
                 || title.equals(GuiTitles.REPORT_PANEL)
                 || title.equals(GuiTitles.REPORT_CASE_PANEL)
                 || title.equals(GuiTitles.REPORT_CONFIRM_PANEL)
-                || title.equals(GuiTitles.REPOT_FINISH_PANEL);
+                || title.equals(GuiTitles.REPOT_FINISH_PANEL)
+                || title.equals(GuiTitles.IS_REPORT_JUSTIFIED);
     }
 
     public void handleGuiClose(Player player)

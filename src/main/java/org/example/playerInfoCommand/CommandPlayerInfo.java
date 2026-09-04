@@ -8,9 +8,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.example.minePermissions.CheckPermission;
+import org.example.playTimeManager.PlayTimeManager;
+import org.example.playTimeManager.sourse.TimeRecorder;
 import org.example.playerInfoCommand.sourse.PlayerInfoManager;
 import org.example.playerProfile.PlayerProfile;
 import org.example.playerProfile.PlayerProfileManager;
+import org.example.playerProfile.PlayerReputation;
+import org.example.playerProfile.playerReputationManager.PlayerReputationManager;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -23,12 +27,16 @@ public class CommandPlayerInfo implements CommandExecutor
     private final CheckPermission checkPermission;
     private final PlayerInfoManager playerInfoManager;
     private final PlayerProfileManager playerProfileManager;
+    private final PlayTimeManager playTimeManager;
+    private final PlayerReputationManager playerReputationManager;
 
-    public CommandPlayerInfo(CheckPermission checkPermission,PlayerInfoManager playerInfoManager,PlayerProfileManager playerProfileManager)
+    public CommandPlayerInfo(CheckPermission checkPermission,PlayerInfoManager playerInfoManager,PlayerProfileManager playerProfileManager,PlayTimeManager playTimeManager,PlayerReputationManager playerReputationManager)
     {
         this.checkPermission = checkPermission;
         this.playerInfoManager = playerInfoManager;
         this.playerProfileManager = playerProfileManager;
+        this.playTimeManager = playTimeManager;
+        this.playerReputationManager = playerReputationManager;
     }
 
 
@@ -44,9 +52,21 @@ public class CommandPlayerInfo implements CommandExecutor
             }
         }
 
-        OfflinePlayer player = Bukkit.getOfflinePlayer(args[0]);
-        PlayerProfile target = playerInfoManager.getProfile(player.getUniqueId());
+        if(args.length == 0)
+        {
+            sender.sendMessage("Usage: /info <player>");
+            return true;
+        }
 
+        OfflinePlayer player = Bukkit.getOfflinePlayer(args[0]);
+        PlayerProfile target = playerProfileManager.getProfile(player.getUniqueId());
+
+       // if(target.getNickName() == null|| target.getUuid() == null)
+        if(target == null)
+        {
+            sender.sendMessage("Player is not found");
+            return true;
+        }
         sender.sendMessage("Player: " + target.getNickName());
         sender.sendMessage("UUID: " + target.getUuid().toString());
         sender.sendMessage("Role: " + playerInfoManager.cheakRole(target));
@@ -66,6 +86,15 @@ public class CommandPlayerInfo implements CommandExecutor
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         sender.sendMessage("First join: " + firstJoin.format(formatter));
+
+        TimeRecorder playTimeR = playTimeManager.getPlayTime(target.getPlayTime());
+        sender.sendMessage("Total playtime: " + playTimeR.toHoursString() + " hours " + playTimeR.toMinutesString() + " minutes " + playTimeR.toSecondsString() + " seconds.");
+
+        PlayerReputation reputation = playerReputationManager.getPlayerReputation(target);
+
+        sender.sendMessage("Reputation: " + reputation.name());
+
+
 
 
         return true;

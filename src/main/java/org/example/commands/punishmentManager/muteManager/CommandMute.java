@@ -11,6 +11,7 @@ import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.minePermissions.CheckPermission;
+import org.example.playerProfile.playerReputationManager.PlayerReputationManager;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -23,14 +24,16 @@ public class CommandMute implements CommandExecutor
     private final MuteManager muteManager;
     private final PunishmentLogManager punishmentLogManager;
     private final GuiManager guiManager;
+    private final PlayerReputationManager reputationManager;
 
-    public CommandMute(CheckPermission checkPermission, MuteManager muteManager, PunishmentLogManager punishmentLogManager,GuiManager guiManager, CommandRestrictionManager commandRestrictionManager)
+    public CommandMute(CheckPermission checkPermission, MuteManager muteManager, PunishmentLogManager punishmentLogManager,GuiManager guiManager, CommandRestrictionManager commandRestrictionManager,PlayerReputationManager reputationManager)
     {
         this.commandRestrictionManager = commandRestrictionManager;
         this.punishmentLogManager = punishmentLogManager;
         this.checkPermission = checkPermission;
         this.muteManager = muteManager;
         this.guiManager = guiManager;
+        this.reputationManager = reputationManager;
     }
 
     @Override
@@ -66,7 +69,6 @@ public class CommandMute implements CommandExecutor
         String reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 
         mutePlayer(sender, target, reason);
-
         return true;
     }
 
@@ -108,6 +110,7 @@ public class CommandMute implements CommandExecutor
             online.sendMessage("You have been muted. Reason: " + reason);
         }
         punishmentLogManager.saveLog(target, reason, sender, PunishmentType.MUTE, Instant.now(), null);
+        reputationManager.setTrustLevelFromCommands(target,-5);
     }
 
     public void getMute(Player admin, Player target)

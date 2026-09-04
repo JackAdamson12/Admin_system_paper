@@ -12,6 +12,7 @@ import org.example.commands.logsManager.PunishmentLogManager;
 import org.example.commands.logsManager.punishmentLogData.PunishmentType;
 import org.example.commands.commandRestriction.source.CommandRestrictionManager;
 import org.example.minePermissions.CheckPermission;
+import org.example.playerProfile.playerReputationManager.PlayerReputationManager;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -24,13 +25,15 @@ public class CommandTempBan implements CommandExecutor
     private final CheckPermission checkPermission;
     private final ProfileBanList banlist;
     private final PunishmentLogManager punishmentLogManager;
+    private final PlayerReputationManager reputationManager;
 
-    public CommandTempBan(CheckPermission checkPermission,PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager)
+    public CommandTempBan(CheckPermission checkPermission,PunishmentLogManager punishmentLogManager, CommandRestrictionManager commandRestrictionManager,PlayerReputationManager reputationManager)
     {
         this.commandRestrictionManager = commandRestrictionManager;
         this.punishmentLogManager = punishmentLogManager;
         this.checkPermission = checkPermission;
         this.banlist = Bukkit.getBanList(BanListType.PROFILE);
+        this.reputationManager = reputationManager;
     }
 
     @Override
@@ -126,6 +129,8 @@ public class CommandTempBan implements CommandExecutor
 
 
         sender.sendMessage("Player " + target.getName() + " is banned.\n" + "Time: " + punishmentTime + "\n" + "Reason: " + reason);
+
+        reputationManager.setTrustLevelFromCommands(target, -5);
 
         return true;
     }

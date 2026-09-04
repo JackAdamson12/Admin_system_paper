@@ -88,6 +88,8 @@ public class ReportFinish
             {
                 config.set(path + ".Punishment", null);
             }
+
+            config.set(path + ".Status", reportCase.getReportResult().name());
         }
 
         saveFile();

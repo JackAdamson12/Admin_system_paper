@@ -4,6 +4,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.example.Main;
 import org.example.reports.sourse.data.LoadedReport;
+import org.example.reports.sourse.data.ReportResult;
 import org.example.reports.sourse.data.ReportStatus;
 import org.example.reports.sourse.data.ReportStruct;
 
@@ -65,6 +66,7 @@ public class ReportStorage
             config.set(path + ".AssignedStaffUuid", null);
         }
 
+        config.set(path + ".Result", ReportResult.UNKNOW.name());
         int reportNumber = 1;
 
         if(config.getConfigurationSection(path + ".Reports") != null)
@@ -147,6 +149,20 @@ public class ReportStorage
                 }
             }
 
+            String resulString = config.getString(path + ".Result", ReportResult.UNKNOW.name());
+
+            ReportResult reportResult;
+
+            try
+            {
+                reportResult = ReportResult.valueOf(resulString);
+            }
+            catch(IllegalArgumentException exception)
+            {
+                plugin.getLogger().warning("Invalid report result for: " + uuidString);
+
+                reportResult = ReportResult.UNKNOW;
+            }
 
 
             List<LoadedReport> reports = new ArrayList<>();
@@ -197,7 +213,7 @@ public class ReportStorage
                 }
             }
 
-            ReportCase reportCase = new ReportCase(targetUuid, targetName, priority, reports, status, assignedStaffUuid);
+            ReportCase reportCase = new ReportCase(targetUuid, targetName, priority, reports, status, reportResult ,assignedStaffUuid);
 
             loadedReports.put(targetUuid, reportCase);
         }

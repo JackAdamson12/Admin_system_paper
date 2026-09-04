@@ -12,6 +12,7 @@ package org.example.commands.guiInterface.source.utils;
         public static final String REPORT_CASE_PANEL = "Report Case Panel";
         public static final String REPORT_CONFIRM_PANEL = "Take Report Case?";
         public static final String REPOT_FINISH_PANEL = "Report Finish Panel";
+        public static final String IS_REPORT_JUSTIFIED = "Is report justified?";
 
         private GuiTitles() {}
     }

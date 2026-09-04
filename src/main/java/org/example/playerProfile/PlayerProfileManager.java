@@ -6,9 +6,11 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.example.Main;
-import org.example.commands.punishmentManager.PunishmentManager;
 import org.example.luckPerms.role.RoleManager;
 import org.example.luckPerms.role.listRols.StaffRole;
+import org.example.playTimeManager.PlayTimeManager;
+import org.example.playTimeManager.sourse.TimeRecorder;
+import org.example.playerProfile.playerReputationManager.PlayerReputationManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +27,6 @@ public class PlayerProfileManager
     private final Map<UUID,PlayerProfile> playersProfile;
 
 
- //   private final RoleManager roleManager;
 
 
     public PlayerProfileManager(Main plugin)
@@ -64,6 +65,10 @@ public class PlayerProfileManager
         String start = "Player." + playerProfile.getUuid();
         config.set(start  + ".Nick_Name", playerProfile.getNickName());
         config.set(start + ".Role", playerProfile.getStaffRole().name());
+        config.set(start + ".Reputation", playerProfile.getTrustLevel());
+        config.set(start + ".LastReputationRewardHours", playerProfile.getLastReputationRewardHours());
+        TimeRecorder timeRecorder = PlayTimeManager.getPlayTime(playerProfile.getPlayTime());
+        config.set(start + ".TimePlay", timeRecorder.toString());
 
         saveFile();
     }
@@ -109,12 +114,6 @@ public class PlayerProfileManager
             String nickName = config.getString(start + ".Nick_Name");
             String roleName = config.getString(start + ".Role");
 
-//            if(nickName == null || roleName == null)
-//            {
-//                plugin.getLogger().warning("Invalid player data in players.yml: " + playerUUID);
-//                continue;
-//            }
-
             if(nickName == null)
             {
                 plugin.getLogger().warning("Nick_Name is null for: " + playerUUID);
@@ -138,17 +137,45 @@ public class PlayerProfileManager
                 plugin.getLogger().warning("Invalid role for player " + playerUUID);
                 continue;
             }
-            PlayerProfile playerProfile;
+
+            int reputationLevel = config.getInt(start + ".Reputation", 50);
+
+            String playTime = config.getString(start + ".TimePlay", "00:00:00");
+
+            long secondsPlayTime;
+
+            try
+            {
+                TimeRecorder timeRecorder = TimeRecorder.fromString(playTime);
+                secondsPlayTime = PlayTimeManager.setPlayTime(timeRecorder);
+            }
+            catch(RuntimeException exception)
+            {
+                plugin.getLogger().warning("Invalid TimePlay for player " + playerUUID + ": " + playTime);
+
+                exception.printStackTrace();
+
+                secondsPlayTime = 0;
+            }
+
+            int hoursPlay = (int) (secondsPlayTime / 3600);
+
+            int lastRewardHours = config.getInt(start + ".LastReputationRewardHours", (hoursPlay / 5) * 5);
+
+            PlayerProfile finishPlayerProfile;
 
             if(staffRole == StaffRole.PLAYER)
             {
-                playerProfile = new PlayerProfile(uuid, nickName, staffRole);
+                finishPlayerProfile = new PlayerProfile(uuid, nickName, staffRole, PlayerStaffStatus.PLAYER, reputationLevel, secondsPlayTime);
             }
             else
             {
-                 playerProfile = new PlayerProfile(uuid, nickName, staffRole, PlayerStaffStatus.OPEN);
+                finishPlayerProfile = new PlayerProfile(uuid, nickName, staffRole, PlayerStaffStatus.OPEN, reputationLevel, secondsPlayTime);
             }
-            playersProfile.put(uuid, playerProfile);
+
+            finishPlayerProfile.setLastReputationRewardHours(lastRewardHours);
+
+            playersProfile.put(uuid, finishPlayerProfile);
         }
     }
 

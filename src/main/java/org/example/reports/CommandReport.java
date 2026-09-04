@@ -44,7 +44,14 @@ public class CommandReport implements CommandExecutor
             return true;
         }
 
+        if(args.length < 2)
+        {
+            sender.sendMessage("Write /report <player> <reason>");
+            return true;
+        }
+
         Player target = Bukkit.getPlayer(args[0]);
+
         if(target == null)
         {
             sender.sendMessage("Player not found");
@@ -54,6 +61,12 @@ public class CommandReport implements CommandExecutor
         PlayerProfile suspect = playerProfileManager.getProfile(target);
         PlayerProfile reporter = playerProfileManager.getProfile(sender);
 
+        if(suspect == null || reporter == null)
+        {
+            sender.sendMessage("Could not find player profile.");
+            return true;
+        }
+
         String reason = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
 
         if(reason.isBlank())
@@ -62,11 +75,11 @@ public class CommandReport implements CommandExecutor
             return true;
         }
 
-        ReportStruct reportStruct = new ReportStruct(reporter,suspect,reason, LocalDateTime.now());
+        ReportStruct reportStruct = new ReportStruct(reporter, suspect, reason, LocalDateTime.now());
 
         reportManager.createReport(reportStruct);
-        sender.sendMessage(ChatColor.YELLOW + "Report is sending. Thank you!");
 
+        sender.sendMessage(ChatColor.YELLOW + "Report is sending. Thank you!");
 
         return true;
     }
